@@ -1,0 +1,30 @@
+{
+  "name": "roxinho-shop-backend",
+  "version": "1.0.0",
+  "description": "Backend Node.js para Roxinho Shop - E-commerce de eletrônicos",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "ecommerce",
+    "api",
+    "nodejs",
+    "express",
+    "mysql"
+  ],
+  "author": "Gabriel (gabwvr)",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "mysql2": "^3.15.2"
+  },
+  "engines": {
+    "node": ">=18.x"
+  }
+}
+
