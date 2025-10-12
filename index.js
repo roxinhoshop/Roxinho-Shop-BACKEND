@@ -1,14 +1,35 @@
 require('dotenv').config();
 const express = require('express');
-const mysql = require('mysql2/promise');
-const cors = require('cors');
+const mysql = require('mysql2/promise');const cors = require(\'cors\');
+const bcrypt = require(\'bcrypt\');
+const jwt = require(\'jsonwebtoken\');
 
+const JWT_SECRET = process.env.JWT_SECRET || \'supersecretjwtkey\'; // Use uma chave secreta forte em produção
 const app = express();
 const port = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Middleware de autenticação JWT
+const authenticateToken = (req, res, next) => {
+    const authHeader = req.headers[\'authorization\'];
+    const token = authHeader && authHeader.split(\' \')[1];
+
+    if (token == null) {
+        return res.status(401).json({ status: \'error\', message: \'Token de autenticação não fornecido.\' });
+    }
+
+    jwt.verify(token, JWT_SECRET, (err, user) => {
+        if (err) {
+            return res.status(403).json({ status: \'error\', message: \'Token de autenticação inválido ou expirado.\' });
+        }
+        req.user = user;
+        next();
+    });
+};
+
 
 // Criar pool de conexões
 const pool = mysql.createPool({
@@ -173,6 +194,60 @@ app.get('/api/produtos/destaque/lista', async (req, res) => {
     }
 });
 
+// Endpoint para registro de usuário
+app.post(\"/api/register\", async (req, res) => {
+    try {
+        const { nome, email, senha } = req.body;
+
+        if (!nome || !email || !senha) {
+            return res.status(400).json({ status: \"error\", message: \"Nome, email e senha são obrigatórios.\" });
+        }
+
+        const [existingUser] = await pool.query(\"SELECT id FROM usuarios WHERE email = ?\", [email]);
+        if (existingUser.length > 0) {
+            return res.status(409).json({ status: \"error\", message: \"Email já cadastrado.\" });
+        }
+
+        const hashedPassword = await bcrypt.hash(senha, 10);
+        const [result] = await pool.query(\"INSERT INTO usuarios (nome, email, senha) VALUES (?, ?, ?)\", [nome, email, hashedPassword]);
+
+        res.status(201).json({ status: \"success\", message: \"Usuário registrado com sucesso!\", userId: result.insertId });
+    } catch (error) {
+        console.error(\"Erro ao registrar usuário:\", error);
+        res.status(500).json({ status: \"error\", message: error.message });
+    }
+});
+
+// Endpoint para login de usuário
+app.post(\"/api/login\", async (req, res) => {
+    try {
+        const { email, senha } = req.body;
+
+        if (!email || !senha) {
+            return res.status(400).json({ status: \"error\", message: \"Email e senha são obrigatórios.\" });
+        }
+
+        const [users] = await pool.query(\"SELECT id, nome, email, senha FROM usuarios WHERE email = ?\", [email]);
+        const user = users[0];
+
+        if (!user) {
+            return res.status(401).json({ status: \"error\", message: \"Credenciais inválidas.\" });
+        }
+
+        const isPasswordValid = await bcrypt.compare(senha, user.senha);
+        if (!isPasswordValid) {
+            return res.status(401).json({ status: \"error\", message: \"Credenciais inválidas.\" });
+        }
+
+        const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: \"1h\" });
+
+        res.json({ status: \"success\", message: \"Login realizado com sucesso!\", token, user: { id: user.id, nome: user.nome, email: user.email } });
+    } catch (error) {
+        console.error(\"Erro ao fazer login:\", error);
+        res.status(500).json({ status: \"error\", message: error.message });
+    }
+});
+
 // Endpoint para listar categorias
 app.get('/api/categorias', async (req, res) => {
     try {
@@ -201,7 +276,7 @@ app.get('/api/categorias', async (req, res) => {
 });
 
 // Endpoint para criar novo produto (admin)
-app.post('/api/produtos', async (req, res) => {
+app.post('/api/produtos', authenticateToken, async (req, res) => {
     try {
         const {
             nome, slug, descricao, descricao_curta, categoria_id,
@@ -242,7 +317,7 @@ app.post('/api/produtos', async (req, res) => {
 });
 
 // Endpoint para atualizar produto (admin)
-app.put('/api/produtos/:id', async (req, res) => {
+app.put('/api/produtos/:id', authenticateToken, async (req, res) => {
     try {
         const { id } = req.params;
         const updates = req.body;
@@ -286,7 +361,7 @@ app.put('/api/produtos/:id', async (req, res) => {
 });
 
 // Endpoint para deletar produto (soft delete)
-app.delete('/api/produtos/:id', async (req, res) => {
+app.delete("/api/produtos/:id", authenticateToken, async (req, res) => {
     try {
         const { id } = req.params;
         
