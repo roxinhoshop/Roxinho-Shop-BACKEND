@@ -17,6 +17,12 @@ app.use(cors());
 app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
+// Middleware de log para depuração
+app.use((req, res, next) => {
+    console.log(`${req.method} ${req.path}`);
+    next();
+});
+
 // Conexão com o banco de dados (mantida aqui para rotas gerais, mas as rotas específicas usarão seus próprios pools)
 const pool = mysql.createPool({
     host: process.env.DB_HOST,
@@ -32,8 +38,24 @@ const pool = mysql.createPool({
 // Rotas da API
 app.get("/", (req, res) => {
     res.json({
+        status: "success",
         message: "API Backend Node.js está funcionando",
-        version: "1.0.0"
+        version: "2.0.0",
+        endpoints: {
+            test: "GET /api/test",
+            auth: {
+                register: "POST /api/auth/register",
+                login: "POST /api/auth/login",
+                verifyEmail: "GET /api/auth/verify-email/:token"
+            },
+            products: {
+                list: "GET /api/products",
+                getById: "GET /api/products/:id",
+                create: "POST /api/products (admin)",
+                update: "PUT /api/products/:id (admin)",
+                delete: "DELETE /api/products/:id (admin)"
+            }
+        }
     });
 });
 
@@ -52,7 +74,12 @@ app.use("/api/products", productRoutes);
 
 // Middleware para lidar com rotas não encontradas
 app.use((req, res) => {
-    res.status(404).json({ message: "Endpoint não encontrado" });
+    res.status(404).json({ 
+        status: "error",
+        message: "Endpoint não encontrado",
+        path: req.path,
+        method: req.method
+    });
 });
 
 if (require.main === module) {

@@ -32,11 +32,25 @@ const transporter = nodemailer.createTransport({
 // Rota de registro
 router.post("/register", async (req, res) => {
     try {
-        const { nome, email, senha } = req.body;
+        const { nome, sobrenome, email, telefone, data_nascimento, senha } = req.body;
+        
+        // Verificar se o email já existe
+        const [existingUsers] = await pool.query("SELECT * FROM usuarios WHERE email = ?", [email]);
+        if (existingUsers.length > 0) {
+            return res.status(400).json({ message: "Este e-mail já está cadastrado." });
+        }
+        
         const hashedPassword = await bcrypt.hash(senha, 10);
-        await pool.query("INSERT INTO usuarios (nome, email, senha, is_admin, verificado) VALUES (?, ?, ?, 0, 1)", [nome, email, hashedPassword]);
+        const nomeCompleto = `${nome} ${sobrenome}`;
+        
+        await pool.query(
+            "INSERT INTO usuarios (nome, email, telefone, data_nascimento, senha, is_admin, verificado) VALUES (?, ?, ?, ?, ?, 0, 1)", 
+            [nomeCompleto, email, telefone, data_nascimento, hashedPassword]
+        );
+        
         res.status(201).json({ message: "Usuário registrado com sucesso!" });
     } catch (error) {
+        console.error("Erro ao registrar usuário:", error);
         res.status(500).json({ message: error.message });
     }
 });
