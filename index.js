@@ -9,9 +9,6 @@ const fs = require("fs");
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Importar rotas
-const authRoutes = require("./routes/auth");
-const productRoutes = require("./routes/products");
 
 app.use(cors());
 app.use(express.json());
@@ -39,7 +36,7 @@ const pool = mysql.createPool({
 app.get("/", (req, res) => {
     res.json({
         status: "success",
-        message: "API Backend Node.js está funcionando",
+        message: "API Backend Roxinho Shop está funcionando",
         version: "2.0.0",
         endpoints: {
             test: "GET /api/test",
@@ -68,7 +65,10 @@ app.get("/api/test", async (req, res) => {
     }
 });
 
-// Usar as rotas modularizadas
+// Importar e usar as rotas modularizadas
+const authRoutes = require("./routes/auth")(pool);
+const productRoutes = require("./routes/products")(pool);
+
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 
