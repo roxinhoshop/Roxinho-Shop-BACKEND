@@ -99,15 +99,7 @@ app.post("/api/register", async (req, res) => {
     try {
         const { nome, email, senha } = req.body;
         const hashedPassword = await bcrypt.hash(senha, 10);
-        // const verificationToken = jwt.sign({ email }, JWT_SECRET, { expiresIn: "1d" });
         await pool.query("INSERT INTO usuarios (nome, email, senha, is_admin, verificado) VALUES (?, ?, ?, 0, 1)", [nome, email, hashedPassword]);
-        // const verificationLink = `${process.env.BASE_URL}/api/verify-email/${verificationToken}`;
-        // await transporter.sendMail({
-        //     from: process.env.EMAIL_USER,
-        //     to: email,
-        //     subject: "Verifique seu e-mail para Roxinho Shop",
-        //     html: `<p>Clique <a href="${verificationLink}">aqui</a> para verificar seu e-mail.</p>`,
-        // });
         res.status(201).json({ message: "Usuário registrado com sucesso!" });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -120,7 +112,7 @@ app.post("/api/login", async (req, res) => {
         const [users] = await pool.query("SELECT * FROM usuarios WHERE email = ?", [email]);
         const user = users[0];
         if (!user) return res.status(401).json({ message: "Credenciais inválidas." });
-        // if (user.verificado === 0) return res.status(401).json({ message: "Por favor, verifique seu e-mail antes de fazer login." });
+
         const isPasswordValid = await bcrypt.compare(senha, user.senha);
         if (!isPasswordValid) return res.status(401).json({ message: "Credenciais inválidas." });
         const token = jwt.sign({ userId: user.id, email: user.email, isAdmin: user.is_admin }, JWT_SECRET, { expiresIn: "1h" });
