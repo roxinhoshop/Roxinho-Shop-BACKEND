@@ -16,3 +16,4 @@ uploads/
 *.log
 test-*.js
 check-*.js
+.env.production
