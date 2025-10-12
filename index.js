@@ -51,6 +51,14 @@ app.get("/", (req, res) => {
                 create: "POST /api/products (admin)",
                 update: "PUT /api/products/:id (admin)",
                 delete: "DELETE /api/products/:id (admin)"
+            },
+            categories: {
+                list: "GET /api/categories",
+                listAll: "GET /api/categories/all (admin)",
+                getById: "GET /api/categories/:id",
+                create: "POST /api/categories (admin)",
+                update: "PUT /api/categories/:id (admin)",
+                delete: "DELETE /api/categories/:id (admin)"
             }
         }
     });
@@ -68,9 +76,11 @@ app.get("/api/test", async (req, res) => {
 // Importar e usar as rotas modularizadas
 const authRoutes = require("./routes/auth")(pool);
 const productRoutes = require("./routes/products")(pool);
+const categoryRoutes = require("./routes/categories")(pool);
 
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
+app.use("/api/categories", categoryRoutes);
 
 // Middleware para lidar com rotas não encontradas
 app.use((req, res) => {

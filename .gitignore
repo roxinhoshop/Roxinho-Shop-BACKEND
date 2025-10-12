@@ -12,3 +12,7 @@ coverage/
 *.swo
 *~
 
+uploads/
+*.log
+test-*.js
+check-*.js

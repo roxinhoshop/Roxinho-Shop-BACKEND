@@ -69,8 +69,8 @@ module.exports = (pool) => {
     router.post("/", authenticateToken, authorizeAdmin, upload.single("imagem"), async (req, res) => {
         try {
             const { nome, descricao, preco, estoque, categoria_id } = req.body;
-            const imagem = req.file ? `/uploads/${req.file.filename}` : null;
-            const [result] = await pool.query("INSERT INTO produto (nome, descricao, preco, estoque, imagem, categoria_id) VALUES (?, ?, ?, ?, ?, ?)", [nome, descricao, preco, estoque, imagem, categoria_id]);
+            const imagem_principal = req.file ? `/uploads/${req.file.filename}` : null;
+            const [result] = await pool.query("INSERT INTO produto (nome, descricao, preco, estoque, imagem_principal, categoria_id) VALUES (?, ?, ?, ?, ?, ?)", [nome, descricao, preco, estoque, imagem_principal, categoria_id]);
             res.status(201).json({ message: "Produto criado com sucesso!", productId: result.insertId });
         } catch (error) {
             res.status(500).json({ message: error.message });
@@ -82,17 +82,17 @@ module.exports = (pool) => {
         try {
             const { id } = req.params;
             const { nome, descricao, preco, estoque, categoria_id } = req.body;
-            let imagem = req.file ? `/uploads/${req.file.filename}` : null;
+            let imagem_principal = req.file ? `/uploads/${req.file.filename}` : null;
 
             // Se uma nova imagem não for enviada, mantenha a imagem existente
-            if (!imagem) {
-                const [product] = await pool.query("SELECT imagem FROM produto WHERE id = ?", [id]);
+            if (!imagem_principal) {
+                const [product] = await pool.query("SELECT imagem_principal FROM produto WHERE id = ?", [id]);
                 if (product.length > 0) {
-                    imagem = product[0].imagem;
+                    imagem_principal = product[0].imagem_principal;
                 }
             }
 
-            const [result] = await pool.query("UPDATE produto SET nome = ?, descricao = ?, preco = ?, estoque = ?, imagem = ?, categoria_id = ? WHERE id = ?", [nome, descricao, preco, estoque, imagem, categoria_id, id]);
+            const [result] = await pool.query("UPDATE produto SET nome = ?, descricao = ?, preco = ?, estoque = ?, imagem_principal = ?, categoria_id = ? WHERE id = ?", [nome, descricao, preco, estoque, imagem_principal, categoria_id, id]);
             if (result.affectedRows === 0) {
                 return res.status(404).json({ message: "Produto não encontrado." });
             }
