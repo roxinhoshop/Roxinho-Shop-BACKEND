@@ -212,14 +212,14 @@ app.post('/api/produtos', async (req, res) => {
 
         const [result] = await pool.query(`
             INSERT INTO produto (
-                nome, slug, descricao, descricao_curta, categoria_id,
-                marca, modelo, sku, preco, preco_promocional, estoque,
-                peso, dimensoes, imagem_principal, galeria_imagens,
-                especificacoes, ativo, destaque
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `, [
             nome, slug, descricao, descricao_curta, categoria_id,
             marca, modelo, sku, preco, preco_promocional, estoque,
+            peso, dimensoes, imagem_principal, galeria_imagens,
+            especificacoes, ativo, destaque
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `, [
+            nome, slug, descricao, descricao_curta, categoria_id,
+            marca, modelo, sku, preco, preco_promocional || null, estoque,
             peso, dimensoes, imagem_principal, 
             galeria_imagens ? JSON.stringify(galeria_imagens) : null,
             especificacoes ? JSON.stringify(especificacoes) : null,
