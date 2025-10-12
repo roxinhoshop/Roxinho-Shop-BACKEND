@@ -43,9 +43,15 @@ module.exports = (pool) => {
             const [rows] = await pool.query(
                 "SELECT * FROM categorias ORDER BY ordem ASC, nome ASC"
             );
-            res.json(rows);
+            res.json({
+                status: 'success',
+                categories: rows
+            });
         } catch (error) {
-            res.status(500).json({ message: error.message });
+            res.status(500).json({ 
+                status: 'error',
+                message: error.message 
+            });
         }
     });
 
@@ -91,6 +97,7 @@ module.exports = (pool) => {
             );
 
             res.status(201).json({
+                status: 'success',
                 message: "Categoria criada com sucesso!",
                 categoryId: result.insertId
             });
@@ -134,7 +141,10 @@ module.exports = (pool) => {
                 return res.status(404).json({ message: "Categoria não encontrada." });
             }
 
-            res.json({ message: "Categoria atualizada com sucesso!" });
+            res.json({ 
+                status: 'success',
+                message: "Categoria atualizada com sucesso!" 
+            });
         } catch (error) {
             res.status(500).json({ message: error.message });
         }
@@ -166,7 +176,10 @@ module.exports = (pool) => {
                 return res.status(404).json({ message: "Categoria não encontrada." });
             }
 
-            res.json({ message: "Categoria desativada com sucesso!" });
+            res.json({ 
+                status: 'success',
+                message: "Categoria desativada com sucesso!" 
+            });
         } catch (error) {
             res.status(500).json({ message: error.message });
         }

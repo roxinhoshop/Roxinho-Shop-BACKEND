@@ -45,9 +45,15 @@ module.exports = (pool) => {
     router.get("/", async (req, res) => {
         try {
             const [rows] = await pool.query("SELECT * FROM produto WHERE ativo = 1");
-            res.json(rows);
+            res.json({
+                status: 'success',
+                products: rows
+            });
         } catch (error) {
-            res.status(500).json({ message: error.message });
+            res.status(500).json({ 
+                status: 'error',
+                message: error.message 
+            });
         }
     });
 
@@ -57,11 +63,20 @@ module.exports = (pool) => {
             const { id } = req.params;
             const [rows] = await pool.query("SELECT * FROM produto WHERE id = ? AND ativo = 1", [id]);
             if (rows.length === 0) {
-                return res.status(404).json({ message: "Produto não encontrado." });
+                return res.status(404).json({ 
+                    status: 'error',
+                    message: "Produto não encontrado." 
+                });
             }
-            res.json(rows[0]);
+            res.json({
+                status: 'success',
+                product: rows[0]
+            });
         } catch (error) {
-            res.status(500).json({ message: error.message });
+            res.status(500).json({ 
+                status: 'error',
+                message: error.message 
+            });
         }
     });
 
@@ -71,7 +86,11 @@ module.exports = (pool) => {
             const { nome, descricao, preco, estoque, categoria_id } = req.body;
             const imagem_principal = req.file ? `/uploads/${req.file.filename}` : null;
             const [result] = await pool.query("INSERT INTO produto (nome, descricao, preco, estoque, imagem_principal, categoria_id) VALUES (?, ?, ?, ?, ?, ?)", [nome, descricao, preco, estoque, imagem_principal, categoria_id]);
-            res.status(201).json({ message: "Produto criado com sucesso!", productId: result.insertId });
+            res.status(201).json({ 
+                status: 'success',
+                message: "Produto criado com sucesso!", 
+                productId: result.insertId 
+            });
         } catch (error) {
             res.status(500).json({ message: error.message });
         }
@@ -96,7 +115,10 @@ module.exports = (pool) => {
             if (result.affectedRows === 0) {
                 return res.status(404).json({ message: "Produto não encontrado." });
             }
-            res.json({ message: "Produto atualizado com sucesso!" });
+            res.json({ 
+                status: 'success',
+                message: "Produto atualizado com sucesso!" 
+            });
         } catch (error) {
             res.status(500).json({ message: error.message });
         }
@@ -110,7 +132,10 @@ module.exports = (pool) => {
             if (result.affectedRows === 0) {
                 return res.status(404).json({ message: "Produto não encontrado." });
             }
-            res.json({ message: "Produto desativado com sucesso!" });
+            res.json({ 
+                status: 'success',
+                message: "Produto desativado com sucesso!" 
+            });
         } catch (error) {
             res.status(500).json({ message: error.message });
         }
