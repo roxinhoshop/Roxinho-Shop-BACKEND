@@ -89,32 +89,58 @@ module.exports = (pool) => {
                 preco, 
                 estoque = 10, 
                 imagem, 
-                categoria, 
-                subcategoria = '', 
                 origem = 'Manual',
                 link_original = '',
-                ativo = 1
+                ativo = 1,
+                marca = null,
+                modelo = null
             } = req.body;
             
-            // Gerar ID único
-            const id = 'prod_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            // Determinar link correto baseado na origem
+            let link_amazon = null;
+            let link_mercado_livre = null;
+            let preco_amazon = null;
+            let preco_mercado_livre = null;
             
-            // Inserir produto
+            if (origem === 'Amazon') {
+                link_amazon = link_original;
+                preco_amazon = preco;
+            } else if (origem === 'Mercado Livre') {
+                link_mercado_livre = link_original;
+                preco_mercado_livre = preco;
+            }
+            
+            // Inserir produto com campos corretos da tabela
             const [result] = await pool.query(
                 `INSERT INTO produto (
-                    id, nome, descricao, preco, estoque, 
-                    imagem, categoria, subcategoria, 
-                    origem, link_original, ativo
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, 
-                [id, nome, descricao, preco, estoque, imagem, categoria, subcategoria, origem, link_original, ativo]
+                    nome, descricao, preco, estoque, 
+                    imagem_principal, marca, modelo,
+                    link_amazon, preco_amazon,
+                    link_mercado_livre, preco_mercado_livre,
+                    ativo
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, 
+                [
+                    nome, 
+                    descricao, 
+                    preco, 
+                    estoque, 
+                    imagem, 
+                    marca,
+                    modelo,
+                    link_amazon,
+                    preco_amazon,
+                    link_mercado_livre,
+                    preco_mercado_livre,
+                    ativo
+                ]
             );
             
             res.status(201).json({ 
                 success: true,
                 status: 'success',
                 message: "Produto criado com sucesso!", 
-                id: id,
-                productId: id
+                id: result.insertId,
+                productId: result.insertId
             });
         } catch (error) {
             console.error('Erro ao criar produto:', error);
