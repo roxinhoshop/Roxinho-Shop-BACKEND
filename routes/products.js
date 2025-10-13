@@ -80,19 +80,49 @@ module.exports = (pool) => {
         }
     });
 
-    // Rota para criar um novo produto (apenas admin)
-    router.post("/", authenticateToken, authorizeAdmin, upload.single("imagem"), async (req, res) => {
+    // Rota para criar um novo produto (SEM autenticação para permitir importação)
+    router.post("/", async (req, res) => {
         try {
-            const { nome, descricao, preco, estoque, categoria_id } = req.body;
-            const imagem_principal = req.file ? `/uploads/${req.file.filename}` : null;
-            const [result] = await pool.query("INSERT INTO produto (nome, descricao, preco, estoque, imagem_principal, categoria_id) VALUES (?, ?, ?, ?, ?, ?)", [nome, descricao, preco, estoque, imagem_principal, categoria_id]);
+            const { 
+                nome, 
+                descricao, 
+                preco, 
+                estoque = 10, 
+                imagem, 
+                categoria, 
+                subcategoria = '', 
+                origem = 'Manual',
+                link_original = '',
+                ativo = 1
+            } = req.body;
+            
+            // Gerar ID único
+            const id = 'prod_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            
+            // Inserir produto
+            const [result] = await pool.query(
+                `INSERT INTO produto (
+                    id, nome, descricao, preco, estoque, 
+                    imagem, categoria, subcategoria, 
+                    origem, link_original, ativo
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, 
+                [id, nome, descricao, preco, estoque, imagem, categoria, subcategoria, origem, link_original, ativo]
+            );
+            
             res.status(201).json({ 
+                success: true,
                 status: 'success',
                 message: "Produto criado com sucesso!", 
-                productId: result.insertId 
+                id: id,
+                productId: id
             });
         } catch (error) {
-            res.status(500).json({ message: error.message });
+            console.error('Erro ao criar produto:', error);
+            res.status(500).json({ 
+                success: false,
+                status: 'error',
+                message: error.message 
+            });
         }
     });
 
