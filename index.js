@@ -77,12 +77,17 @@ app.get("/api/test", async (req, res) => {
 const authRoutes = require("./routes/auth")(pool);
 const productRoutes = require("./routes/products")(pool);
 const categoryRoutes = require("./routes/categories")(pool);
+const productImagesRoutes = require("./routes/product-images")(pool);
+const reviewsRoutes = require("./routes/reviews")(pool);
 
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/produtos", productRoutes); // Alias em português
 app.use("/api/categories", categoryRoutes);
 app.use("/api/categorias", categoryRoutes); // Alias em português
+app.use("/api/product-images", productImagesRoutes);
+app.use("/api/reviews", reviewsRoutes);
+app.use("/api/avaliacoes", reviewsRoutes); // Alias em português
 
 // Middleware para lidar com rotas não encontradas
 app.use((req, res) => {
