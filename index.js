@@ -80,7 +80,9 @@ const categoryRoutes = require("./routes/categories")(pool);
 
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
+app.use("/api/produtos", productRoutes); // Alias em português
 app.use("/api/categories", categoryRoutes);
+app.use("/api/categorias", categoryRoutes); // Alias em português
 
 // Middleware para lidar com rotas não encontradas
 app.use((req, res) => {
