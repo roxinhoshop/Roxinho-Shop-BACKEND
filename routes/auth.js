@@ -164,5 +164,22 @@ module.exports = (pool) => {
         }
     });
 
+    // Rota para listar todos os usuários (apenas admin)
+    router.get("/users", authenticateToken, authorizeAdmin, async (req, res) => {
+        try {
+            const [users] = await pool.query("SELECT id, nome, email, telefone, data_nascimento, is_admin, verificado FROM usuarios");
+            res.json({
+                success: true,
+                users: users
+            });
+        } catch (error) {
+            console.error("Erro ao listar usuários:", error);
+            res.status(500).json({
+                success: false,
+                message: error.message
+            });
+        }
+    });
+
     return router;
 };
