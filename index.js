@@ -16,10 +16,10 @@ const { upload, handleUploadError } = require('./middleware/uploadValidation');
 
 // Middleware
 app.use(cors({
-    origin: config.server.frontendUrl,
-    credentials: true,
+    origin: '*',
+    credentials: false,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 
 app.use(express.json({ limit: `${config.upload.maxFileSize}` }));
