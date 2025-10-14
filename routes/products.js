@@ -93,21 +93,31 @@ module.exports = (pool) => {
                 link_original = '',
                 ativo = 1,
                 marca = null,
-                modelo = null
+                modelo = null,
+                link_amazon = null,
+                preco_amazon = null,
+                link_mercado_livre = null,
+                preco_mercado_livre = null,
+                categoria_id = null
             } = req.body;
             
-            // Determinar link correto baseado na origem
-            let link_amazon = null;
-            let link_mercado_livre = null;
-            let preco_amazon = null;
-            let preco_mercado_livre = null;
-            
-            if (origem === 'Amazon') {
-                link_amazon = link_original;
-                preco_amazon = preco;
-            } else if (origem === 'Mercado Livre') {
-                link_mercado_livre = link_original;
-                preco_mercado_livre = preco;
+            // Se a origem for 'Link', os campos link_amazon, preco_amazon, link_mercado_livre, preco_mercado_livre
+            // e categoria_id já devem vir preenchidos pelo scraper.
+            // Caso contrário, determinar link correto baseado na origem 'Manual', 'Amazon' ou 'Mercado Livre'.
+            let final_link_amazon = link_amazon;
+            let final_preco_amazon = preco_amazon;
+            let final_link_mercado_livre = link_mercado_livre;
+            let final_preco_mercado_livre = preco_mercado_livre;
+            let final_categoria_id = categoria_id;
+
+            if (origem === 'Manual') {
+                // Lógica existente para produtos manuais
+            } else if (origem === 'Amazon' && link_original) {
+                final_link_amazon = link_original;
+                final_preco_amazon = preco;
+            } else if (origem === 'Mercado Livre' && link_original) {
+                final_link_mercado_livre = link_original;
+                final_preco_mercado_livre = preco;
             }
             
             // Inserir produto com campos corretos da tabela
@@ -117,8 +127,9 @@ module.exports = (pool) => {
                     imagem_principal, marca, modelo,
                     link_amazon, preco_amazon,
                     link_mercado_livre, preco_mercado_livre,
-                    ativo
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, 
+                    ativo,
+                    categoria_id
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, 
                 [
                     nome, 
                     descricao, 
@@ -127,11 +138,12 @@ module.exports = (pool) => {
                     imagem, 
                     marca,
                     modelo,
-                    link_amazon,
-                    preco_amazon,
-                    link_mercado_livre,
-                    preco_mercado_livre,
-                    ativo
+                    final_link_amazon,
+                    final_preco_amazon,
+                    final_link_mercado_livre,
+                    final_preco_mercado_livre,
+                    ativo,
+                    final_categoria_id
                 ]
             );
             
