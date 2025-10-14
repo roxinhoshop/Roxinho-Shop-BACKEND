@@ -1,10 +1,11 @@
 const multer = require('multer');
 const path = require('path');
+const config = require('../config');
 
-// Configuração do multer com limite de 50MB
+// Configuração do multer com limite definido no config
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, 'uploads/');
+        cb(null, config.upload.uploadDir);
     },
     filename: (req, file, cb) => {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -14,22 +15,22 @@ const storage = multer.diskStorage({
 
 // Filtro para tipos de arquivo permitidos
 const fileFilter = (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|gif|webp/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
+    // Usar os tipos permitidos do config
+    const isAllowedType = config.upload.allowedFileTypes.includes(file.mimetype);
+    const extname = /jpeg|jpg|png|gif|webp/.test(path.extname(file.originalname).toLowerCase());
 
-    if (mimetype && extname) {
+    if (isAllowedType && extname) {
         return cb(null, true);
     } else {
-        cb(new Error('Apenas imagens são permitidas (JPEG, JPG, PNG, GIF, WEBP)'));
+        cb(new Error(`Apenas imagens são permitidas (${config.upload.allowedFileTypes.map(type => type.split('/')[1]).join(', ')})`));
     }
 };
 
-// Configuração do multer com limite de 50MB (52428800 bytes)
+// Configuração do multer com limite do config
 const upload = multer({
     storage: storage,
     limits: {
-        fileSize: 52428800, // 50MB em bytes
+        fileSize: config.upload.maxFileSize, // Limite definido no config
         files: 10 // Máximo 10 arquivos por upload
     },
     fileFilter: fileFilter

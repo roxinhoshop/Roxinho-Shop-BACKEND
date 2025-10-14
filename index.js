@@ -5,44 +5,47 @@ const path = require("path");
 const fs = require("fs");
 require("dotenv").config();
 
+// Importar configurações centralizadas
+const config = require('./config');
+
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = config.server.port;
 
 // Importar middleware de upload
 const { upload, handleUploadError } = require('./middleware/uploadValidation');
 
 // Middleware
 app.use(cors({
-    origin: process.env.FRONTEND_URL || "*",
+    origin: config.server.frontendUrl,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(express.json({ limit: `${config.upload.maxFileSize}` }));
+app.use(express.urlencoded({ extended: true, limit: `${config.upload.maxFileSize}` }));
 
 // Servir arquivos estáticos da pasta uploads
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(path.join(__dirname, config.upload.uploadDir)));
 
 // Criar pasta uploads se não existir
-const uploadsDir = path.join(__dirname, 'uploads');
+const uploadsDir = path.join(__dirname, config.upload.uploadDir);
 if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
 // Configuração do banco de dados
 const dbConfig = {
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    port: process.env.DB_PORT || 3306,
+    host: config.database.host,
+    user: config.database.user,
+    password: config.database.password,
+    database: config.database.name,
+    port: config.database.port,
     waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0,
-    acquireTimeout: 60000,
-    timeout: 60000,
+    connectionLimit: config.database.connectionLimit,
+    queueLimit: config.database.queueLimit,
+    acquireTimeout: config.database.acquireTimeout,
+    timeout: config.database.timeout,
     reconnect: true
 };
 
@@ -65,12 +68,15 @@ app.get("/", (req, res) => {
         version: "1.0.0",
         timestamp: new Date().toISOString(),
         endpoints: {
-            auth: "/api/auth",
-            products: "/api/products",
-            categories: "/api/categories",
-            reviews: "/api/reviews",
-            historico: "/api/historico",
-            uploads: "/api/upload"
+            auth: config.endpoints.auth,
+            products: config.endpoints.products,
+            categories: config.endpoints.categories,
+            reviews: config.endpoints.reviews,
+            historico: config.endpoints.historico,
+            uploads: config.endpoints.upload,
+            productImages: config.endpoints.productImages,
+            productScraper: config.endpoints.productScraper,
+            adapter: config.endpoints.adapter
         }
     });
 });
@@ -105,14 +111,14 @@ const productScraperRoutes = require("./routes/product-scraper")(pool);
 const adapterRoutes = require("./routes/adapter")(pool);
 
 // Aplicar rotas
-app.use("/api/auth", authRoutes);
-app.use("/api/products", productRoutes);
-app.use("/api/categories", categoryRoutes);
-app.use("/api/reviews", reviewRoutes);
-app.use("/api/historico", historicoRoutes);
-app.use("/api/product-images", productImageRoutes);
-app.use("/api/product-scraper", productScraperRoutes);
-app.use("/api/adapter", adapterRoutes);
+app.use(config.endpoints.auth, authRoutes);
+app.use(config.endpoints.products, productRoutes);
+app.use(config.endpoints.categories, categoryRoutes);
+app.use(config.endpoints.reviews, reviewRoutes);
+app.use(config.endpoints.historico, historicoRoutes);
+app.use(config.endpoints.productImages, productImageRoutes);
+app.use(config.endpoints.productScraper, productScraperRoutes);
+app.use(config.endpoints.adapter, adapterRoutes);
 
 // Rota específica para upload de imagens de usuário com validação de 50MB
 app.post('/api/upload/user-photo', upload.single('photo'), (req, res) => {
