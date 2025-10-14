@@ -17,8 +17,8 @@ const { upload, handleUploadError } = require('./middleware/uploadValidation');
 
 // Middleware
 app.use(cors({
-    origin: '*', // Em produção, restrinja para o seu domínio frontend
-    credentials: false,
+    origin: process.env.NODE_ENV === 'production' ? 'https://roxinho-shop.vercel.app' : '*', // Restringe o domínio em produção, permite todos em desenvolvimento
+    credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
@@ -92,7 +92,7 @@ app.get("/", (req, res) => {
             historico: config.endpoints.historico,
             uploads: config.endpoints.upload,
             productImages: config.endpoints.productImages,
-            productScraper: config.endpoints.productScraper,
+
 
         }
     });
@@ -124,7 +124,7 @@ const categoryRoutes = require("./routes/categories")(pool);
 const reviewRoutes = require("./routes/reviews")(pool);
 const historicoRoutes = require("./routes/historico")(pool);
 const productImageRoutes = require("./routes/product-images")(pool);
-const productScraperRoutes = require("./routes/product-scraper")(pool);
+
 
 
 // Aplicar rotas
@@ -134,7 +134,7 @@ app.use(config.endpoints.categories, categoryRoutes);
 app.use(config.endpoints.reviews, reviewRoutes);
 app.use(config.endpoints.historico, historicoRoutes);
 app.use(config.endpoints.productImages, productImageRoutes);
-app.use(config.endpoints.productScraper, productScraperRoutes);
+
 
 
 // Rota específica para upload de imagens de usuário com validação de 50MB
