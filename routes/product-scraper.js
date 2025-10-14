@@ -197,7 +197,4 @@ module.exports = (pool) => {
 
 
 
-router.get('/test-scraper', (req, res) => {
-    res.json({ success: true, message: 'Test GET route for scraper is working!' });
-});
 
