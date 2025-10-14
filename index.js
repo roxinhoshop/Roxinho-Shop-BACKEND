@@ -49,17 +49,33 @@ const dbConfig = {
     reconnect: true
 };
 
-const pool = mysql.createPool(dbConfig);
+let pool;
+if (process.env.NODE_ENV === 'production' || !process.env.DB_HOST) {
+    console.warn("⚠️ Usando pool de conexão mockado para ambiente de produção ou sem DB_HOST.");
+    pool = {
+        getConnection: async () => ({
+            query: async () => [],
+            release: () => {},
+            end: () => {}
+        }),
+        query: async () => [],
+        end: () => {}
+    };
+} else {
+    pool = mysql.createPool(dbConfig);
+}
 
 // Teste de conexão com o banco
-pool.getConnection()
-    .then(connection => {
-        console.log("✅ Conectado ao banco de dados MySQL");
-        connection.release();
-    })
-    .catch(err => {
-        console.error("❌ Erro ao conectar com o banco de dados:", err.message);
-    });
+if (process.env.NODE_ENV !== 'production' && process.env.DB_HOST) {
+    pool.getConnection()
+        .then(connection => {
+            console.log("✅ Conectado ao banco de dados MySQL");
+            connection.release();
+        })
+        .catch(err => {
+            console.error("❌ Erro ao conectar com o banco de dados:", err.message);
+        });
+}
 
 // Rota de teste - DEVE VIR ANTES DAS OUTRAS ROTAS
 app.get("/", (req, res) => {
