@@ -58,6 +58,42 @@ pool.getConnection()
         console.error("❌ Erro ao conectar com o banco de dados:", err.message);
     });
 
+// Rota de teste - DEVE VIR ANTES DAS OUTRAS ROTAS
+app.get("/", (req, res) => {
+    res.json({ 
+        message: "🚀 Roxinho Shop API está funcionando!",
+        version: "1.0.0",
+        timestamp: new Date().toISOString(),
+        endpoints: {
+            auth: "/api/auth",
+            products: "/api/products",
+            categories: "/api/categories",
+            reviews: "/api/reviews",
+            historico: "/api/historico",
+            uploads: "/api/upload"
+        }
+    });
+});
+
+// Rota de health check - DEVE VIR ANTES DAS OUTRAS ROTAS
+app.get("/health", async (req, res) => {
+    try {
+        await pool.query('SELECT 1');
+        res.json({
+            status: "healthy",
+            database: "connected",
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        res.status(500).json({
+            status: "unhealthy",
+            database: "disconnected",
+            error: error.message,
+            timestamp: new Date().toISOString()
+        });
+    }
+});
+
 // Importar e usar as rotas
 const authRoutes = require("./routes/auth")(pool);
 const productRoutes = require("./routes/products")(pool);
@@ -68,7 +104,7 @@ const productImageRoutes = require("./routes/product-images")(pool);
 const productScraperRoutes = require("./routes/product-scraper")(pool);
 const adapterRoutes = require("./routes/adapter")(pool);
 
-// Aplicar middleware de upload para rotas específicas
+// Aplicar rotas
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/categories", categoryRoutes);
@@ -143,42 +179,6 @@ app.post('/api/upload/multiple', upload.array('files', 10), (req, res) => {
 // Middleware de tratamento de erros de upload
 app.use(handleUploadError);
 
-// Rota de teste
-app.get("/", (req, res) => {
-    res.json({ 
-        message: "🚀 Roxinho Shop API está funcionando!",
-        version: "1.0.0",
-        timestamp: new Date().toISOString(),
-        endpoints: {
-            auth: "/api/auth",
-            products: "/api/products",
-            categories: "/api/categories",
-            reviews: "/api/reviews",
-            historico: "/api/historico",
-            uploads: "/api/upload"
-        }
-    });
-});
-
-// Rota de health check
-app.get("/health", async (req, res) => {
-    try {
-        await pool.query('SELECT 1');
-        res.json({
-            status: "healthy",
-            database: "connected",
-            timestamp: new Date().toISOString()
-        });
-    } catch (error) {
-        res.status(500).json({
-            status: "unhealthy",
-            database: "disconnected",
-            error: error.message,
-            timestamp: new Date().toISOString()
-        });
-    }
-});
-
 // Middleware de tratamento de erros global
 app.use((error, req, res, next) => {
     console.error('Erro não tratado:', error);
@@ -189,11 +189,11 @@ app.use((error, req, res, next) => {
     });
 });
 
-// Middleware para rotas não encontradas
+// Middleware para rotas não encontradas - DEVE VIR POR ÚLTIMO
 app.use((req, res) => {
     res.status(404).json({
-        success: false,
-        error: 'Rota não encontrada',
+        status: "error",
+        message: "Endpoint não encontrado",
         path: req.path,
         method: req.method
     });
