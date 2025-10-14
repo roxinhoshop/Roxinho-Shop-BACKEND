@@ -51,7 +51,7 @@ const dbConfig = {
 };
 
 let pool;
-if (process.env.NODE_ENV === 'production' || !process.env.DB_HOST) {
+if (!process.env.DB_HOST) {
     console.warn("⚠️ Usando pool de conexão mockado para ambiente de produção ou sem DB_HOST.");
     pool = {
         getConnection: async () => ({
@@ -67,7 +67,7 @@ if (process.env.NODE_ENV === 'production' || !process.env.DB_HOST) {
 }
 
 // Teste de conexão com o banco
-if (process.env.NODE_ENV !== 'production' && process.env.DB_HOST) {
+if (process.env.DB_HOST) {
     pool.getConnection()
         .then(connection => {
             console.log("✅ Conectado ao banco de dados MySQL");

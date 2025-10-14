@@ -205,35 +205,82 @@ module.exports = (pool) => {
             });
             const $ = cheerio.load(data);
 
-            // Tentativas de encontrar o nome do produto
-            const productName = $("meta[property=\"og:title\"]").attr("content") ||
-                                $("h1").first().text().trim() ||
-                                $("title").text().trim().replace(/\s*\|\s*.*$/, ""); // Remove site name from title
-
-            // Tentativas de encontrar o preço
-            let price = 0.00;
-            const priceText = $("meta[property=\"product:price:amount\"]").attr("content") ||
-                              $("meta[itemprop=\"price\"]").attr("content") ||
-                              $(".price").first().text().trim() ||
-                              $(".product-price").first().text().trim() ||
-                              $("[class*=\"price\"]").first().text().trim(); // More generic price selector
-            if (priceText) {
-                price = parseFloat(priceText.replace(/[^0-9,.]/g, "").replace(",", "."));
+            let productName = '';
+            const nameSelectors = [
+                'meta[property="og:title"]',
+                'h1',
+                'title',
+                '.product-title',
+                '.item-title',
+                'h1.ui-pdp-title'
+            ];
+            for (const selector of nameSelectors) {
+                const el = $(selector);
+                if (el.length) {
+                    productName = el.attr('content') || el.text();
+                    if (productName) {
+                        productName = productName.trim().replace(/\s*\|\s*.*$/, "");
+                        break;
+                    }
+                }
             }
 
-            // Tentativas de encontrar a descrição
-            const description = $("meta[property=\"og:description\"]").attr("content") ||
-                                $("meta[name=\"description\"]").attr("content") ||
-                                $(".description").first().text().trim() ||
-                                $(".product-description").first().text().trim() ||
-                                $("[class*=\"description\"]").first().text().trim(); // More generic description selector
+            let price = 0.00;
+            const priceSelectors = [
+                'meta[property="product:price:amount"]',
+                'meta[itemprop="price"]',
+                '.price',
+                '.product-price',
+                '[class*="price"]',
+                '.ui-pdp-price__second-line .andes-money-amount__fraction'
+            ];
+            for (const selector of priceSelectors) {
+                const el = $(selector);
+                if (el.length) {
+                    let priceText = el.attr('content') || el.text();
+                    if (priceText) {
+                        price = parseFloat(priceText.replace(/[^0-9,.]/g, "").replace(",", "."));
+                        if (!isNaN(price) && price > 0) break;
+                    }
+                }
+            }
 
-            // Tentativas de encontrar a imagem
-            const imageUrl = $("meta[property=\"og:image\"]").attr("content") ||
-                             $("img.product-image").first().attr("src") ||
-                             $("img.main-image").first().attr("src") ||
-                             $("img[itemprop=\"image\"]").first().attr("src") ||
-                             $("img[src*=\"product\"]").first().attr("src"); // More generic image selector
+            let description = '';
+            const descriptionSelectors = [
+                'meta[property="og:description"]',
+                'meta[name="description"]',
+                '.description',
+                '.product-description',
+                '[class*="description"]',
+                '.ui-pdp-description__content'
+            ];
+            for (const selector of descriptionSelectors) {
+                const el = $(selector);
+                if (el.length) {
+                    description = el.attr('content') || el.text();
+                    if (description) {
+                        description = description.trim();
+                        break;
+                    }
+                }
+            }
+
+            let imageUrl = '';
+            const imageSelectors = [
+                'meta[property="og:image"]',
+                'img.product-image',
+                'img.main-image',
+                'img[itemprop="image"]',
+                'img[src*="product"]',
+                '.ui-pdp-gallery__figure__image'
+            ];
+            for (const selector of imageSelectors) {
+                const el = $(selector);
+                if (el.length) {
+                    imageUrl = el.attr('src');
+                    if (imageUrl) break;
+                }
+            }
 
             const categoria_id = await detectCategory(productName || "", null, pool);
 
