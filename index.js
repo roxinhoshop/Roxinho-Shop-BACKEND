@@ -92,7 +92,7 @@ app.get("/", (req, res) => {
             uploads: config.endpoints.upload,
             productImages: config.endpoints.productImages,
             productScraper: config.endpoints.productScraper,
-            adapter: config.endpoints.adapter
+
         }
     });
 });
@@ -124,7 +124,7 @@ const reviewRoutes = require("./routes/reviews")(pool);
 const historicoRoutes = require("./routes/historico")(pool);
 const productImageRoutes = require("./routes/product-images")(pool);
 const productScraperRoutes = require("./routes/product-scraper")(pool);
-const adapterRoutes = require("./routes/adapter")(pool);
+
 
 // Aplicar rotas
 app.use(config.endpoints.auth, authRoutes);
@@ -134,7 +134,7 @@ app.use(config.endpoints.reviews, reviewRoutes);
 app.use(config.endpoints.historico, historicoRoutes);
 app.use(config.endpoints.productImages, productImageRoutes);
 app.use(config.endpoints.productScraper, productScraperRoutes);
-app.use(config.endpoints.adapter, adapterRoutes);
+
 
 // Rota específica para upload de imagens de usuário com validação de 50MB
 app.post('/api/upload/user-photo', upload.single('photo'), (req, res) => {
