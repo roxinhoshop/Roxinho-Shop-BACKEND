@@ -195,7 +195,3 @@ module.exports = (pool) => {
 
 
 
-router.get('/extract-from-url', (req, res) => {
-    res.status(405).json({ success: false, message: 'Método GET não é permitido para esta rota. Use POST.' });
-});
-
