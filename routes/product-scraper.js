@@ -1,15 +1,17 @@
 /**
  * Product Scraper - Extração de dados de produtos via URL
- * Suporta Mercado Livre e Amazon
+ * Suporta Mercado Livre, Amazon e um scraper genérico
  */
 
 const express = require('express');
 const router = express.Router();
+const axios = require('axios');
+const cheerio = require('cheerio');
 
 module.exports = (pool) => {
     /**
      * POST /api/products/extract-from-url
-     * Extrai dados de um produto a partir de uma URL do Mercado Livre ou Amazon
+     * Extrai dados de um produto a partir de uma URL do Mercado Livre, Amazon ou genericamente
      */
     router.post('/extract-from-url', async (req, res) => {
         try {
@@ -22,25 +24,18 @@ module.exports = (pool) => {
                 });
             }
             
-            // Detectar plataforma
-            let platform = null;
+            let productData;
+            let platform = 'generico';
+
             if (url.includes('mercadolivre.com.br') || url.includes('mercadolibre.com')) {
                 platform = 'mercadolivre';
+                productData = await extractFromMercadoLivre(url);
             } else if (url.includes('amazon.com.br') || url.includes('amazon.com')) {
                 platform = 'amazon';
-            } else {
-                return res.status(400).json({
-                    success: false,
-                    message: 'URL não suportada. Use links do Mercado Livre ou Amazon.'
-                });
-            }
-            
-            // Extrair dados baseado na plataforma
-            let productData;
-            if (platform === 'mercadolivre') {
-                productData = await extractFromMercadoLivre(url);
-            } else if (platform === 'amazon') {
                 productData = await extractFromAmazon(url);
+            } else {
+                // Tentar scraper genérico para outras URLs
+                productData = await extractGeneric(url);
             }
             
             if (!productData) {
@@ -110,7 +105,6 @@ module.exports = (pool) => {
      */
     async function extractFromMercadoLivre(url) {
         try {
-            // Extrair ID do produto da URL
             const mlbMatch = url.match(/MLB-?(\d+)/i);
             if (!mlbMatch) {
                 throw new Error('ID do produto não encontrado na URL');
@@ -119,18 +113,11 @@ module.exports = (pool) => {
             const productId = mlbMatch[0].replace('-', '');
             const apiUrl = `https://api.mercadolibre.com/items/${productId}`;
             
-            // Fazer requisição à API do Mercado Livre
-            const response = await fetch(apiUrl);
-            if (!response.ok) {
-                throw new Error('Produto não encontrado no Mercado Livre');
-            }
+            const response = await axios.get(apiUrl);
+            const data = response.data;
             
-            const data = await response.json();
-            
-            // Detectar categoria automaticamente
             const categoria_id = await detectCategory(data.title, data.category_id, pool);
             
-            // Extrair dados relevantes
             return {
                 nome: data.title,
                 preco: data.price,
@@ -153,48 +140,106 @@ module.exports = (pool) => {
     }
     
     /**
-     * Extrai dados de um produto da Amazon
+     * Extrai dados de um produto da Amazon usando scraping básico
      */
     async function extractFromAmazon(url) {
         try {
-            // Extrair ASIN da URL
-            const asinMatch = url.match(/\/dp\/([A-Z0-9]{10})/i) || url.match(/\/gp\/product\/([A-Z0-9]{10})/i);
-            if (!asinMatch) {
-                throw new Error('ASIN do produto não encontrado na URL');
-            }
-            
-            const asin = asinMatch[1];
-            
-            // NOTA: A Amazon não possui uma API pública gratuita para extração de dados
-            // Esta é uma implementação simplificada que retorna dados mockados
-            // Para produção, seria necessário usar um serviço de scraping ou API paga
-            
+            const { data } = await axios.get(url, {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                }
+            });
+            const $ = cheerio.load(data);
+
+            const productName = $('#productTitle').text().trim() || $('h1 span#title').text().trim();
+            const priceText = $('.a-price-whole').first().text().trim() + $('.a-price-fraction').first().text().trim();
+            const price = parseFloat(priceText.replace(/[^0-9,]/g, '').replace(',', '.'));
+            const description = $('#productDescription p').first().text().trim() || $('#feature-bullets ul').text().trim();
+            const imageUrl = $('#landingImage').attr('src') || $('#imgTagWrapperId img').attr('src');
+
+            const categoria_id = await detectCategory(productName, null, pool);
+
             return {
-                nome: `Produto Amazon ${asin}`,
-                preco: 0.00,
-                descricao: 'Descrição do produto da Amazon. Para obter dados reais, é necessário integrar com um serviço de scraping ou API paga.',
-                imagem: 'https://via.placeholder.com/400?text=Amazon+Product',
-                galeria_imagens: JSON.stringify([]),
+                nome: productName || 'Nome do Produto Amazon Desconhecido',
+                preco: price || 0.00,
+                descricao: description || 'Descrição não disponível.',
+                imagem: imageUrl || 'https://via.placeholder.com/400?text=Amazon+Product',
+                galeria_imagens: JSON.stringify(imageUrl ? [imageUrl] : []),
                 marca: null,
                 modelo: null,
                 estoque: 0,
+                categoria_id: categoria_id,
                 link_amazon: url,
-                preco_amazon: 0.00,
+                preco_amazon: price || 0.00,
                 ativo: 1
             };
-            
+
         } catch (error) {
             console.error('Erro ao extrair da Amazon:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Extrai dados de um produto de forma genérica usando scraping
+     */
+    async function extractGeneric(url) {
+        try {
+            const { data } = await axios.get(url, {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                }
+            });
+            const $ = cheerio.load(data);
+
+            // Tentativas de encontrar o nome do produto
+            const productName = $('meta[property="og:title"]').attr('content') ||
+                                $('h1').first().text().trim() ||
+                                $('title').text().trim();
+
+            // Tentativas de encontrar o preço
+            let price = 0.00;
+            const priceText = $('meta[property="product:price:amount"]').attr('content') ||
+                              $('meta[itemprop="price"]').attr('content') ||
+                              $('.price').first().text().trim() ||
+                              $('.product-price').first().text().trim();
+            if (priceText) {
+                price = parseFloat(priceText.replace(/[^0-9,.]/g, '').replace(',', '.'));
+            }
+
+            // Tentativas de encontrar a descrição
+            const description = $('meta[property="og:description"]').attr('content') ||
+                                $('meta[name="description"]').attr('content') ||
+                                $('.description').first().text().trim() ||
+                                $('.product-description').first().text().trim();
+
+            // Tentativas de encontrar a imagem
+            const imageUrl = $('meta[property="og:image"]').attr('content') ||
+                             $('img.product-image').first().attr('src') ||
+                             $('img.main-image').first().attr('src');
+
+            const categoria_id = await detectCategory(productName || '', null, pool);
+
+            return {
+                nome: productName || 'Nome do Produto Desconhecido',
+                preco: price || 0.00,
+                descricao: description || 'Descrição não disponível.',
+                imagem: imageUrl || 'https://via.placeholder.com/400?text=Product',
+                galeria_imagens: JSON.stringify(imageUrl ? [imageUrl] : []),
+                marca: null,
+                modelo: null,
+                estoque: 0,
+                categoria_id: categoria_id,
+                link_original: url,
+                preco_original: price || 0.00,
+                ativo: 1
+            };
+
+        } catch (error) {
+            console.error('Erro ao extrair genericamente:', error);
             throw error;
         }
     }
     
     return router;
 };
-
-
-
-
-
-
-

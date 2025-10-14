@@ -4,6 +4,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const mysql = require("mysql2/promise");
 const nodemailer = require("nodemailer");
+const { authenticateToken, authorizeAdmin } = require("../middleware/authMiddleware");
 
 const JWT_SECRET = process.env.JWT_SECRET || "supersecretjwtkey";
 
