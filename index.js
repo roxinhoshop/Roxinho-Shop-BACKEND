@@ -1,13 +1,30 @@
 
+require("dotenv").config();
+
 const express = require("express");
 const cors = require("cors");
 const mysql = require("mysql2/promise");
 const path = require("path");
 const fs = require("fs");
-require("dotenv").config();
 
 // Importar configurações centralizadas
 const config = require('./config');
+
+console.log("--- Variáveis de Ambiente do Banco de Dados (process.env) ---");
+console.log("DB_HOST:", process.env.DB_HOST);
+console.log("DB_PORT:", process.env.DB_PORT);
+console.log("DB_DATABASE:", process.env.DB_DATABASE);
+console.log("DB_USER:", process.env.DB_USER);
+console.log("DB_PASSWORD:", process.env.DB_PASSWORD ? "********" : "Não definida");
+console.log("----------------------------------------------------------");
+
+console.log("--- Configuração do Banco de Dados (config.database) ---");
+console.log("Host:", config.database.host);
+console.log("Port:", config.database.port);
+console.log("Database:", config.database.name);
+console.log("User:", config.database.user);
+console.log("Password:", config.database.password ? "********" : "Não definida");
+console.log("--------------------------------------------------------");
 
 const app = express();
 const PORT = config.server.port;
