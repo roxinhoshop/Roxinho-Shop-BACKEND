@@ -205,22 +205,21 @@ module.exports = (pool) => {
             });
             const $ = cheerio.load(data);
 
-            let productName = "";
+            let productName = '';
             const nameSelectors = [
-                "meta[property=\"og:title\"]",
-                "meta[name=\"twitter:title\"]",
-                "h1.product-title",
-                "h1.item-title",
-                "h1[itemprop=\"name\"]",
-                "h1",
-                "title"
+                'meta[property="og:title"]',
+                'h1',
+                'title',
+                '.product-title',
+                '.item-title',
+                'h1.ui-pdp-title'
             ];
             for (const selector of nameSelectors) {
                 const el = $(selector);
                 if (el.length) {
-                    productName = el.attr("content") || el.text();
+                    productName = el.attr('content') || el.text();
                     if (productName) {
-                        productName = productName.trim().replace(/\s*\|\s*.*$/, "").replace(/\s*-\s*.*$/, ""); // Remove site name from title
+                        productName = productName.trim().replace(/\s*\|\s*.*$/, "");
                         break;
                     }
                 }
@@ -228,22 +227,17 @@ module.exports = (pool) => {
 
             let price = 0.00;
             const priceSelectors = [
-                "meta[property=\"product:price:amount\"]",
-                "meta[itemprop=\"price\"]",
-                "meta[name=\"twitter:data1\"]", // Often contains price for Twitter cards
-                ".price",
-                ".product-price",
-                "span[itemprop=\"price\"]",
-                "div.price-display",
-                "span.sales-price",
-                "span.value",
-                "b.price-tag",
-                "strong.price-value"
+                'meta[property="product:price:amount"]',
+                'meta[itemprop="price"]',
+                '.price',
+                '.product-price',
+                '[class*="price"]',
+                '.ui-pdp-price__second-line .andes-money-amount__fraction'
             ];
             for (const selector of priceSelectors) {
                 const el = $(selector);
                 if (el.length) {
-                    let priceText = el.attr("content") || el.text();
+                    let priceText = el.attr('content') || el.text();
                     if (priceText) {
                         price = parseFloat(priceText.replace(/[^0-9,.]/g, "").replace(",", "."));
                         if (!isNaN(price) && price > 0) break;
@@ -251,22 +245,19 @@ module.exports = (pool) => {
                 }
             }
 
-            let description = "";
+            let description = '';
             const descriptionSelectors = [
-                "meta[property=\"og:description\"]",
-                "meta[name=\"description\"]",
-                "meta[name=\"twitter:description\"]",
-                ".description",
-                ".product-description",
-                "div[itemprop=\"description\"]",
-                "#product-description",
-                ".description-content",
-                ".item-description"
+                'meta[property="og:description"]',
+                'meta[name="description"]',
+                '.description',
+                '.product-description',
+                '[class*="description"]',
+                '.ui-pdp-description__content'
             ];
             for (const selector of descriptionSelectors) {
                 const el = $(selector);
                 if (el.length) {
-                    description = el.attr("content") || el.text();
+                    description = el.attr('content') || el.text();
                     if (description) {
                         description = description.trim();
                         break;
@@ -274,22 +265,19 @@ module.exports = (pool) => {
                 }
             }
 
-            let imageUrl = "";
+            let imageUrl = '';
             const imageSelectors = [
-                "meta[property=\"og:image\"]",
-                "meta[name=\"twitter:image\"]",
-                "img.product-image",
-                "img.main-image",
-                "img[itemprop=\"image\"]",
-                "img[src*=\"product\"]",
-                "#product-image",
-                ".product-gallery-image",
-                ".item-image"
+                'meta[property="og:image"]',
+                'img.product-image',
+                'img.main-image',
+                'img[itemprop="image"]',
+                'img[src*="product"]',
+                '.ui-pdp-gallery__figure__image'
             ];
             for (const selector of imageSelectors) {
                 const el = $(selector);
                 if (el.length) {
-                    imageUrl = el.attr("src");
+                    imageUrl = el.attr('src');
                     if (imageUrl) break;
                 }
             }
