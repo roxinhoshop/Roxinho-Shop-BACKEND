@@ -4,18 +4,27 @@
     {
       "src": "index.js",
       "use": "@vercel/node"
+    },
+    {
+      "src": "api/extract-product.js",
+      "use": "@vercel/node"
     }
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "index.js",
-      "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+      "src": "/api/product-scraper/extract-from-url",
+      "dest": "/api/extract-product.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.js"
     }
   ],
-  "functions": {
-    "index.js": {
-      "maxDuration": 30
-    }
+  "env": {
+    "DB_HOST": "switchback.proxy.rlwy.net",
+    "DB_PORT": "46156",
+    "DB_NAME": "railway",
+    "DB_USER": "root",
+    "DB_PASSWORD": "neFMagcBhfWUyBoRNMCBBTCZsTeyeBja"
   }
 }
