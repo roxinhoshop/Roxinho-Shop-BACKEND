@@ -67,6 +67,45 @@ module.exports = (pool) => {
     });
     
     /**
+     * Detecta categoria automaticamente baseada no nome do produto
+     */
+    async function detectCategory(productName, mlCategoryId, pool) {
+        try {
+            const name = productName.toLowerCase();
+            
+            // Mapeamento de palavras-chave para categorias
+            const categoryMap = {
+                2: ['mouse', 'teclado', 'headset', 'fone', 'webcam', 'microfone'],
+                1: ['processador', 'placa de vídeo', 'memória ram', 'ssd', 'hd', 'fonte'],
+                3: ['notebook', 'desktop', 'pc', 'computador', 'all in one'],
+                4: ['console', 'playstation', 'xbox', 'nintendo', 'controle', 'joystick'],
+                5: ['celular', 'smartphone', 'iphone', 'galaxy', 'xiaomi'],
+                6: ['tv', 'televisão', 'smart tv', 'soundbar', 'home theater'],
+                7: ['caixa de som', 'alto-falante', 'speaker', 'jbl'],
+                8: ['cadeira gamer', 'mesa gamer', 'suporte monitor'],
+                9: ['alexa', 'google home', 'lâmpada inteligente', 'tomada inteligente'],
+                10: ['carregador', 'bateria', 'power bank', 'fonte de alimentação']
+            };
+            
+            // Buscar categoria por palavra-chave
+            for (const [catId, keywords] of Object.entries(categoryMap)) {
+                for (const keyword of keywords) {
+                    if (name.includes(keyword)) {
+                        return parseInt(catId);
+                    }
+                }
+            }
+            
+            // Categoria padrão: Periféricos
+            return 2;
+            
+        } catch (error) {
+            console.error('Erro ao detectar categoria:', error);
+            return 2; // Categoria padrão
+        }
+    }
+    
+    /**
      * Extrai dados de um produto do Mercado Livre
      */
     async function extractFromMercadoLivre(url) {
@@ -88,6 +127,9 @@ module.exports = (pool) => {
             
             const data = await response.json();
             
+            // Detectar categoria automaticamente
+            const categoria_id = await detectCategory(data.title, data.category_id, pool);
+            
             // Extrair dados relevantes
             return {
                 nome: data.title,
@@ -98,6 +140,7 @@ module.exports = (pool) => {
                 marca: data.attributes?.find(a => a.id === 'BRAND')?.value_name || null,
                 modelo: data.attributes?.find(a => a.id === 'MODEL')?.value_name || null,
                 estoque: data.available_quantity || 0,
+                categoria_id: categoria_id,
                 link_mercado_livre: url,
                 preco_mercado_livre: data.price,
                 ativo: 1
