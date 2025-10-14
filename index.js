@@ -1,3 +1,4 @@
+
 const express = require("express");
 const cors = require("cors");
 const mysql = require("mysql2/promise");
@@ -16,7 +17,7 @@ const { upload, handleUploadError } = require('./middleware/uploadValidation');
 
 // Middleware
 app.use(cors({
-    origin: '*',
+    origin: '*', // Em produção, restrinja para o seu domínio frontend
     credentials: false,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
@@ -137,7 +138,7 @@ app.use(config.endpoints.productScraper, productScraperRoutes);
 
 
 // Rota específica para upload de imagens de usuário com validação de 50MB
-app.post('/api/upload/user-photo', upload.single('photo'), (req, res) => {
+app.post(`${config.endpoints.upload}/user-photo`, upload.single('photo'), (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({
@@ -168,7 +169,7 @@ app.post('/api/upload/user-photo', upload.single('photo'), (req, res) => {
 });
 
 // Rota para múltiplos uploads com validação
-app.post('/api/upload/multiple', upload.array('files', 10), (req, res) => {
+app.post(`${config.endpoints.upload}/multiple`, upload.array('files', 10), (req, res) => {
     try {
         if (!req.files || req.files.length === 0) {
             return res.status(400).json({
@@ -228,3 +229,4 @@ app.listen(PORT, () => {
 });
 
 module.exports = app;
+
