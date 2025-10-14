@@ -3,45 +3,45 @@
  * Suporta Mercado Livre, Amazon e um scraper genérico
  */
 
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const axios = require('axios');
-const cheerio = require('cheerio');
+const axios = require("axios");
+const cheerio = require("cheerio");
 
 module.exports = (pool) => {
     /**
      * POST /api/products/extract-from-url
      * Extrai dados de um produto a partir de uma URL do Mercado Livre, Amazon ou genericamente
      */
-    router.post('/extract-from-url', async (req, res) => {
+    router.post("/extract-from-url", async (req, res) => {
         try {
             const { url } = req.body;
             
             if (!url) {
                 return res.status(400).json({
                     success: false,
-                    message: 'URL é obrigatória'
+                    message: "URL é obrigatória"
                 });
             }
             
             let productData;
-            let platform = 'generico';
+            let platform = "generico";
 
-            if (url.includes('mercadolivre.com.br') || url.includes('mercadolibre.com')) {
-                platform = 'mercadolivre';
+            if (url.includes("mercadolivre.com.br") || url.includes("mercadolibre.com")) {
+                platform = "mercadolivre";
                 productData = await extractFromMercadoLivre(url);
-            } else if (url.includes('amazon.com.br') || url.includes('amazon.com')) {
-                platform = 'amazon';
+            } else if (url.includes("amazon.com.br") || url.includes("amazon.com")) {
+                platform = "amazon";
                 productData = await extractFromAmazon(url);
             } else {
                 // Tentar scraper genérico para outras URLs
                 productData = await extractGeneric(url);
             }
             
-            if (!productData) {
+            if (!productData || !productData.nome) {
                 return res.status(500).json({
                     success: false,
-                    message: 'Não foi possível extrair dados do produto'
+                    message: "Não foi possível extrair dados do produto ou nome do produto não encontrado."
                 });
             }
             
@@ -52,10 +52,10 @@ module.exports = (pool) => {
             });
             
         } catch (error) {
-            console.error('Erro ao extrair dados do produto:', error);
+            console.error("Erro ao extrair dados do produto:", error);
             res.status(500).json({
                 success: false,
-                message: 'Erro ao processar a URL',
+                message: "Erro ao processar a URL",
                 error: error.message
             });
         }
@@ -70,16 +70,16 @@ module.exports = (pool) => {
             
             // Mapeamento de palavras-chave para categorias
             const categoryMap = {
-                2: ['mouse', 'teclado', 'headset', 'fone', 'webcam', 'microfone'],
-                1: ['processador', 'placa de vídeo', 'memória ram', 'ssd', 'hd', 'fonte'],
-                3: ['notebook', 'desktop', 'pc', 'computador', 'all in one'],
-                4: ['console', 'playstation', 'xbox', 'nintendo', 'controle', 'joystick'],
-                5: ['celular', 'smartphone', 'iphone', 'galaxy', 'xiaomi'],
-                6: ['tv', 'televisão', 'smart tv', 'soundbar', 'home theater'],
-                7: ['caixa de som', 'alto-falante', 'speaker', 'jbl'],
-                8: ['cadeira gamer', 'mesa gamer', 'suporte monitor'],
-                9: ['alexa', 'google home', 'lâmpada inteligente', 'tomada inteligente'],
-                10: ['carregador', 'bateria', 'power bank', 'fonte de alimentação']
+                2: ["mouse", "teclado", "headset", "fone", "webcam", "microfone"],
+                1: ["processador", "placa de vídeo", "memória ram", "ssd", "hd", "fonte"],
+                3: ["notebook", "desktop", "pc", "computador", "all in one"],
+                4: ["console", "playstation", "xbox", "nintendo", "controle", "joystick"],
+                5: ["celular", "smartphone", "iphone", "galaxy", "xiaomi"],
+                6: ["tv", "televisão", "smart tv", "soundbar", "home theater"],
+                7: ["caixa de som", "alto-falante", "speaker", "jbl"],
+                8: ["cadeira gamer", "mesa gamer", "suporte monitor"],
+                9: ["alexa", "google home", "lâmpada inteligente", "tomada inteligente"],
+                10: ["carregador", "bateria", "power bank", "fonte de alimentação"]
             };
             
             // Buscar categoria por palavra-chave
@@ -95,7 +95,7 @@ module.exports = (pool) => {
             return 2;
             
         } catch (error) {
-            console.error('Erro ao detectar categoria:', error);
+            console.error("Erro ao detectar categoria:", error);
             return 2; // Categoria padrão
         }
     }
@@ -107,10 +107,10 @@ module.exports = (pool) => {
         try {
             const mlbMatch = url.match(/MLB-?(\d+)/i);
             if (!mlbMatch) {
-                throw new Error('ID do produto não encontrado na URL');
+                throw new Error("ID do produto não encontrado na URL");
             }
             
-            const productId = mlbMatch[0].replace('-', '');
+            const productId = mlbMatch[0].replace("-", "");
             const apiUrl = `https://api.mercadolibre.com/items/${productId}`;
             
             const response = await axios.get(apiUrl);
@@ -121,11 +121,11 @@ module.exports = (pool) => {
             return {
                 nome: data.title,
                 preco: data.price,
-                descricao: data.plain_text || data.subtitle || '',
+                descricao: data.plain_text || data.subtitle || "",
                 imagem: data.thumbnail || data.pictures?.[0]?.url || data.secure_thumbnail,
                 galeria_imagens: JSON.stringify(data.pictures?.map(p => p.url) || []),
-                marca: data.attributes?.find(a => a.id === 'BRAND')?.value_name || null,
-                modelo: data.attributes?.find(a => a.id === 'MODEL')?.value_name || null,
+                marca: data.attributes?.find(a => a.id === "BRAND")?.value_name || null,
+                modelo: data.attributes?.find(a => a.id === "MODEL")?.value_name || null,
                 estoque: data.available_quantity || 0,
                 categoria_id: categoria_id,
                 link_mercado_livre: url,
@@ -134,7 +134,7 @@ module.exports = (pool) => {
             };
             
         } catch (error) {
-            console.error('Erro ao extrair do Mercado Livre:', error);
+            console.error("Erro ao extrair do Mercado Livre:", error);
             throw error;
         }
     }
@@ -146,24 +146,37 @@ module.exports = (pool) => {
         try {
             const { data } = await axios.get(url, {
                 headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
                 }
             });
             const $ = cheerio.load(data);
 
-            const productName = $('#productTitle').text().trim() || $('h1 span#title').text().trim();
-            const priceText = $('.a-price-whole').first().text().trim() + $('.a-price-fraction').first().text().trim();
-            const price = parseFloat(priceText.replace(/[^0-9,]/g, '').replace(',', '.'));
-            const description = $('#productDescription p').first().text().trim() || $('#feature-bullets ul').text().trim();
-            const imageUrl = $('#landingImage').attr('src') || $('#imgTagWrapperId img').attr('src');
+            const productName = $("#productTitle").text().trim() || $("h1 span#title").text().trim() || $("meta[name=\"title\"]").attr("content");
+            
+            let price = 0.00;
+            const priceWhole = $(".a-price-whole").first().text().trim();
+            const priceFraction = $(".a-price-fraction").first().text().trim();
+            const priceSymbol = $(".a-price-symbol").first().text().trim();
+
+            if (priceWhole && priceFraction) {
+                price = parseFloat(`${priceWhole}.${priceFraction}`.replace(/[^0-9.]/g, ""));
+            } else {
+                const priceText = $(".a-offscreen").first().text().trim();
+                if (priceText) {
+                    price = parseFloat(priceText.replace(/[^0-9,.]/g, "").replace(",", "."));
+                }
+            }
+
+            const description = $("#productDescription p").first().text().trim() || $("#feature-bullets ul").text().trim() || $("meta[name=\"description\"]").attr("content");
+            const imageUrl = $("#landingImage").attr("src") || $("#imgTagWrapperId img").attr("src") || $("meta[property=\"og:image\"]").attr("content");
 
             const categoria_id = await detectCategory(productName, null, pool);
 
             return {
-                nome: productName || 'Nome do Produto Amazon Desconhecido',
+                nome: productName || "Nome do Produto Amazon Desconhecido",
                 preco: price || 0.00,
-                descricao: description || 'Descrição não disponível.',
-                imagem: imageUrl || 'https://via.placeholder.com/400?text=Amazon+Product',
+                descricao: description || "Descrição não disponível.",
+                imagem: imageUrl || "https://via.placeholder.com/400?text=Amazon+Product",
                 galeria_imagens: JSON.stringify(imageUrl ? [imageUrl] : []),
                 marca: null,
                 modelo: null,
@@ -175,7 +188,7 @@ module.exports = (pool) => {
             };
 
         } catch (error) {
-            console.error('Erro ao extrair da Amazon:', error);
+            console.error("Erro ao extrair da Amazon:", error);
             throw error;
         }
     }
@@ -187,44 +200,48 @@ module.exports = (pool) => {
         try {
             const { data } = await axios.get(url, {
                 headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
                 }
             });
             const $ = cheerio.load(data);
 
             // Tentativas de encontrar o nome do produto
-            const productName = $('meta[property="og:title"]').attr('content') ||
-                                $('h1').first().text().trim() ||
-                                $('title').text().trim();
+            const productName = $("meta[property=\"og:title\"]").attr("content") ||
+                                $("h1").first().text().trim() ||
+                                $("title").text().trim().replace(/\s*\|\s*.*$/, ""); // Remove site name from title
 
             // Tentativas de encontrar o preço
             let price = 0.00;
-            const priceText = $('meta[property="product:price:amount"]').attr('content') ||
-                              $('meta[itemprop="price"]').attr('content') ||
-                              $('.price').first().text().trim() ||
-                              $('.product-price').first().text().trim();
+            const priceText = $("meta[property=\"product:price:amount\"]").attr("content") ||
+                              $("meta[itemprop=\"price\"]").attr("content") ||
+                              $(".price").first().text().trim() ||
+                              $(".product-price").first().text().trim() ||
+                              $("[class*=\"price\"]").first().text().trim(); // More generic price selector
             if (priceText) {
-                price = parseFloat(priceText.replace(/[^0-9,.]/g, '').replace(',', '.'));
+                price = parseFloat(priceText.replace(/[^0-9,.]/g, "").replace(",", "."));
             }
 
             // Tentativas de encontrar a descrição
-            const description = $('meta[property="og:description"]').attr('content') ||
-                                $('meta[name="description"]').attr('content') ||
-                                $('.description').first().text().trim() ||
-                                $('.product-description').first().text().trim();
+            const description = $("meta[property=\"og:description\"]").attr("content") ||
+                                $("meta[name=\"description\"]").attr("content") ||
+                                $(".description").first().text().trim() ||
+                                $(".product-description").first().text().trim() ||
+                                $("[class*=\"description\"]").first().text().trim(); // More generic description selector
 
             // Tentativas de encontrar a imagem
-            const imageUrl = $('meta[property="og:image"]').attr('content') ||
-                             $('img.product-image').first().attr('src') ||
-                             $('img.main-image').first().attr('src');
+            const imageUrl = $("meta[property=\"og:image\"]").attr("content") ||
+                             $("img.product-image").first().attr("src") ||
+                             $("img.main-image").first().attr("src") ||
+                             $("img[itemprop=\"image\"]").first().attr("src") ||
+                             $("img[src*=\"product\"]").first().attr("src"); // More generic image selector
 
-            const categoria_id = await detectCategory(productName || '', null, pool);
+            const categoria_id = await detectCategory(productName || "", null, pool);
 
             return {
-                nome: productName || 'Nome do Produto Desconhecido',
+                nome: productName || "Nome do Produto Desconhecido",
                 preco: price || 0.00,
-                descricao: description || 'Descrição não disponível.',
-                imagem: imageUrl || 'https://via.placeholder.com/400?text=Product',
+                descricao: description || "Descrição não disponível.",
+                imagem: imageUrl || "https://via.placeholder.com/400?text=Product",
                 galeria_imagens: JSON.stringify(imageUrl ? [imageUrl] : []),
                 marca: null,
                 modelo: null,
@@ -236,7 +253,7 @@ module.exports = (pool) => {
             };
 
         } catch (error) {
-            console.error('Erro ao extrair genericamente:', error);
+            console.error("Erro ao extrair genericamente:", error);
             throw error;
         }
     }
