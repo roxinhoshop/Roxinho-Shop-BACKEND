@@ -7,7 +7,7 @@ const config = {
     port: process.env.PORT || 3000,
     env: process.env.NODE_ENV || 'development',
     frontendUrl: process.env.FRONTEND_URL || '*',
-    apiBaseUrl: process.env.API_BASE_URL || ''
+    apiBaseUrl: process.env.API_BASE_URL || '/api'
   },
   
   // Configurações do banco de dados
