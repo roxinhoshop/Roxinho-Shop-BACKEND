@@ -31,7 +31,18 @@ module.exports = (pool) => {
             const [rows] = await pool.query(
                 "SELECT * FROM categorias WHERE ativo = 1 ORDER BY ordem ASC, nome ASC"
             );
-            res.json(rows);
+            const categorias = {};
+            rows.forEach(row => {
+                if (!row.categoria_pai_id) {
+                    categorias[row.id] = { ...row, subcategorias: [] };
+                }
+            });
+            rows.forEach(row => {
+                if (row.categoria_pai_id && categorias[row.categoria_pai_id]) {
+                    categorias[row.categoria_pai_id].subcategorias.push(row);
+                }
+            });
+            res.json(Object.values(categorias));
         } catch (error) {
             res.status(500).json({ message: error.message });
         }

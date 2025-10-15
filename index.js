@@ -129,8 +129,8 @@ const productImageRoutes = require("./routes/product-images")(pool);
 
 // Aplicar rotas
 app.use("/api" + config.endpoints.auth, authRoutes);
-app.use("/api" + config.endpoints.products, productRoutes);
-app.use("/api" + config.endpoints.categories, categoryRoutes);
+app.use("/api" + config.endpoints.products.replace(/^\//, ""), productRoutes);
+app.use("/api" + config.endpoints.categories.replace(/^\//, ""), categoryRoutes);
 app.use("/api" + config.endpoints.reviews, reviewRoutes);
 app.use("/api" + config.endpoints.historico, historicoRoutes);
 app.use("/api" + config.endpoints.productImages, productImageRoutes);
