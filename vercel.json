@@ -14,11 +14,9 @@
     {
       "src": "/api/product-scraper/extract-from-url",
       "dest": "/api/extract-product.js"
-    },
-    {
+    },    {
       "src": "/(.*)",
       "dest": "/index.js"
     }
-  ],
-
+  ]
 }
