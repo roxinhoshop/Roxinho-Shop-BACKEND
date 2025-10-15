@@ -40,16 +40,16 @@ const config = {
   
   // Endpoints da API
   endpoints: {
-    base: '/api',
-    auth: '/api/auth',
-    products: '/api/products',
-    categories: '/api/categories',
-    reviews: '/api/reviews',
-    historico: '/api/historico',
-    productImages: '/api/product-images',
-    productScraper: '/api/product-scraper',
-    adapter: '/api/adapter',
-    upload: '/api/upload'
+    base: '',
+    auth: '/auth',
+    products: '/products',
+    categories: '/categories',
+    reviews: '/reviews',
+    historico: '/historico',
+    productImages: '/product-images',
+    productScraper: '/product-scraper',
+    adapter: '/adapter',
+    upload: '/upload'
   }
 };
 
