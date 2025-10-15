@@ -2,6 +2,10 @@
 // Este arquivo centraliza todas as configurações do backend
 
 const config = {
+  console.log("--- Variáveis de Ambiente do Banco de Dados em config.js (process.env) ---");
+  console.log("DB_DATABASE:", process.env.DB_DATABASE);
+  console.log("-------------------------------------------------------------------");
+
   // Configurações do servidor
   server: {
     port: process.env.PORT || 3000,
@@ -15,7 +19,7 @@ const config = {
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
-    name: process.env.DB_NAME,
+    name: process.env.DB_DATABASE,
     port: process.env.DB_PORT || 3306,
     connectionLimit: 10,
     queueLimit: 0,
