@@ -4,6 +4,8 @@
  */
 
 const mysql = require('mysql2/promise');
+const axios = require("axios");
+const cheerio = require("cheerio");
 
 // Configuração do banco de dados
 const dbConfig = {
@@ -112,6 +114,65 @@ async function extractFromMercadoLivre(url) {
 }
 
 /**
+ * Extrai dados de um produto da Amazon usando scraping básico
+ */
+async function extractFromAmazon(url) {
+    try {
+        const { data } = await axios.get(url, {
+            timeout: 10000, // Adicionar um timeout para evitar requisições penduradas
+
+            headers: {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+            }
+        });
+        const $ = cheerio.load(data);
+
+        const productName = $("#productTitle").text().trim() || $("h1 span#title").text().trim() || $("meta[name=\"title\"]").attr("content") || $("meta[property=\"og:title\"]").attr("content");
+        
+        let price = 0.00;
+        const priceSelectors = [
+            "span.a-price span.a-offscreen",
+            "#priceblock_ourprice",
+            "#priceblock_dealprice",
+            "#kindle-price",
+            ".a-color-price"
+        ];
+
+        for (const selector of priceSelectors) {
+            const priceText = $(selector).text().trim();
+            if (priceText) {
+                price = parseFloat(priceText.replace(/[^0-9,.]/g, "").replace(",", "."));
+                if (!isNaN(price) && price > 0) break;
+            }
+        }
+
+        const description = $("#productDescription p").first().text().trim() || $("#feature-bullets ul").text().trim() || $("meta[name=\"description\"]").attr("content") || $("meta[property=\"og:description\"]").attr("content");
+        const imageUrl = $("#landingImage").attr("src") || $("#imgTagWrapperId img").attr("src") || $("meta[property=\"og:image\"]").attr("content") || $("meta[name=\"twitter:image\"]").attr("content");
+
+        const categoria_id = await detectCategory(productName);
+
+        return {
+            nome: productName || "Nome do Produto Amazon Desconhecido",
+            preco: price || 0.00,
+            descricao: description || "Descrição não disponível.",
+            imagem: imageUrl || "https://via.placeholder.com/400?text=Amazon+Product",
+            galeria_imagens: JSON.stringify(imageUrl ? [imageUrl] : []),
+            marca: null,
+            modelo: null,
+            estoque: 0,
+            categoria_id: categoria_id,
+            link_amazon: url,
+            preco_amazon: price || 0.00,
+            ativo: 1
+        };
+
+    } catch (error) {
+        console.error("Erro ao extrair da Amazon:", error.message, error.response?.status, error.response?.data);
+        throw error;
+    }
+}
+
+/**
  * Handler principal da função serverless
  */
 module.exports = async (req, res) => {
@@ -186,65 +247,3 @@ module.exports = async (req, res) => {
         });
     }
 };
-
-
-
-
-/**
- * Extrai dados de um produto da Amazon usando scraping básico
- */
-async function extractFromAmazon(url) {
-    try {
-        const { data } = await axios.get(url, {
-            timeout: 10000, // Adicionar um timeout para evitar requisições penduradas
-
-            headers: {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-            }
-        });
-        const $ = cheerio.load(data);
-
-        const productName = $("#productTitle").text().trim() || $("h1 span#title").text().trim() || $("meta[name=\"title\"]").attr("content") || $("meta[property=\"og:title\"]").attr("content");
-        
-        let price = 0.00;
-        const priceSelectors = [
-            "span.a-price span.a-offscreen",
-            "#priceblock_ourprice",
-            "#priceblock_dealprice",
-            "#kindle-price",
-            ".a-color-price"
-        ];
-
-        for (const selector of priceSelectors) {
-            const priceText = $(selector).text().trim();
-            if (priceText) {
-                price = parseFloat(priceText.replace(/[^0-9,.]/g, "").replace(",", "."));
-                if (!isNaN(price) && price > 0) break;
-            }
-        }
-
-        const description = $("#productDescription p").first().text().trim() || $("#feature-bullets ul").text().trim() || $("meta[name=\"description\"]").attr("content") || $("meta[property=\"og:description\"]").attr("content");
-        const imageUrl = $("#landingImage").attr("src") || $("#imgTagWrapperId img").attr("src") || $("meta[property=\"og:image\"]").attr("content") || $("meta[name=\"twitter:image\"]").attr("content");
-
-        const categoria_id = await detectCategory(productName, null, pool);
-
-        return {
-            nome: productName || "Nome do Produto Amazon Desconhecido",
-            preco: price || 0.00,
-            descricao: description || "Descrição não disponível.",
-            imagem: imageUrl || "https://via.placeholder.com/400?text=Amazon+Product",
-            galeria_imagens: JSON.stringify(imageUrl ? [imageUrl] : []),
-            marca: null,
-            modelo: null,
-            estoque: 0,
-            categoria_id: categoria_id,
-            link_amazon: url,
-            preco_amazon: price || 0.00,
-            ativo: 1
-        };
-
-    } catch (error) {
-        console.error("Erro ao extrair da Amazon:", error.message, error.response?.status, error.response?.data);
-        throw error;
-    }
-}
