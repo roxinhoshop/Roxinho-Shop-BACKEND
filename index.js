@@ -1,5 +1,5 @@
 
-require("dotenv").config();
+
 
 const express = require("express");
 const cors = require("cors");
@@ -16,6 +16,12 @@ console.log("DB_PORT:", process.env.DB_PORT);
 console.log("DB_DATABASE:", process.env.DB_DATABASE);
 console.log("DB_USER:", process.env.DB_USER);
 console.log("DB_PASSWORD:", process.env.DB_PASSWORD ? "********" : "Não definida");
+console.log("--- process.env completo (temporário para depuração) ---");
+const envToLog = { ...process.env };
+if (envToLog.DB_PASSWORD) envToLog.DB_PASSWORD = "********";
+if (envToLog.JWT_SECRET) envToLog.JWT_SECRET = "********";
+console.log(envToLog);
+console.log("---------------------------------------------------------");
 console.log("----------------------------------------------------------");
 
 console.log("--- Configuração do Banco de Dados (config.database) ---");
