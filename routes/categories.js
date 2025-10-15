@@ -48,6 +48,81 @@ module.exports = (pool) => {
         }
     });
 
+    // Obter uma subcategoria por slug da categoria pai
+    router.get("/:parentSlug/:subSlug", async (req, res) => {
+        try {
+            const { parentSlug, subSlug } = req.params;
+
+            const [parentRows] = await pool.query(
+                "SELECT id FROM categorias WHERE slug = ? AND ativo = 1",
+                [parentSlug]
+            );
+            if (parentRows.length === 0) {
+                return res.status(404).json({ message: "Categoria pai não encontrada." });
+            }
+            const parentId = parentRows[0].id;
+
+            const [subRows] = await pool.query(
+                "SELECT * FROM categorias WHERE slug = ? AND categoria_pai_id = ? AND ativo = 1",
+                [subSlug, parentId]
+            );
+            if (subRows.length === 0) {
+                return res.status(404).json({ message: "Subcategoria não encontrada." });
+            }
+            res.json(subRows[0]);
+        } catch (error) {
+            console.error("Erro ao obter subcategoria por slug:", error);
+            res.status(500).json({ message: error.message });
+        }
+    });
+
+    // Obter uma categoria por slug (incluindo suas subcategorias)
+    router.get("/:slug", async (req, res) => {
+        try {
+            const { slug } = req.params;
+            const [rows] = await pool.query(
+                "SELECT * FROM categorias WHERE slug = ? AND ativo = 1",
+                [slug]
+            );
+            if (rows.length === 0) {
+                return res.status(404).json({ message: "Categoria não encontrada." });
+            }
+            const categoriaPrincipal = { ...rows[0], subcategorias: [] };
+
+            const [subRows] = await pool.query(
+                "SELECT * FROM categorias WHERE categoria_pai_id = ? AND ativo = 1 ORDER BY ordem ASC, nome ASC",
+                [categoriaPrincipal.id]
+            );
+            categoriaPrincipal.subcategorias = subRows;
+
+            res.json(categoriaPrincipal);
+        } catch (error) {
+            console.error("Erro ao obter categoria por slug:", error);
+            res.status(500).json({ message: error.message });
+        }
+    });
+
+    // Obter uma categoria por ID (deve vir por último para evitar conflito com slugs)
+    router.get("/:id", async (req, res) => {
+        try {
+            const { id } = req.params;
+            // Verificar se o ID é um número para evitar conflito com slugs
+            if (isNaN(id)) {
+                return res.status(404).json({ message: "Formato de ID inválido." });
+            }
+            const [rows] = await pool.query(
+                "SELECT * FROM categorias WHERE id = ?",
+                [id]
+            );
+            if (rows.length === 0) {
+                return res.status(404).json({ message: "Categoria não encontrada." });
+            }
+            res.json(rows[0]);
+        } catch (error) {
+            res.status(500).json({ message: error.message });
+        }
+    });
+
     // Listar todas as categorias incluindo inativas (admin)
     router.get("/all", authenticateToken, authorizeAdmin, async (req, res) => {
         try {
@@ -63,23 +138,6 @@ module.exports = (pool) => {
                 status: 'error',
                 message: error.message 
             });
-        }
-    });
-
-    // Obter uma categoria por ID
-    router.get("/:id", async (req, res) => {
-        try {
-            const { id } = req.params;
-            const [rows] = await pool.query(
-                "SELECT * FROM categorias WHERE id = ?",
-                [id]
-            );
-            if (rows.length === 0) {
-                return res.status(404).json({ message: "Categoria não encontrada." });
-            }
-            res.json(rows[0]);
-        } catch (error) {
-            res.status(500).json({ message: error.message });
         }
     });
 
@@ -198,4 +256,3 @@ module.exports = (pool) => {
 
     return router;
 };
-
