@@ -20,9 +20,7 @@ const { upload, handleUploadError } = require('./middleware/uploadValidation');
 
 // Middleware
 app.use(cors({
-    origin: '*', // Removido para depuração. Em produção, considere restringir a domínios específicos.
-        '*',
-    credentials: true,
+    origin: config.server.frontendUrl,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));

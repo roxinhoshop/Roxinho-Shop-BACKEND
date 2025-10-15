@@ -23,8 +23,9 @@
   "env": {
     "DB_HOST": "switchback.proxy.rlwy.net",
     "DB_PORT": "46156",
-    "DB_NAME": "railway",
+    "DB_DATABASE": "railway",
     "DB_USER": "root",
-    "DB_PASSWORD": "neFMagcBhfWUyBoRNMCBBTCZsTeyeBja"
+    "DB_PASSWORD": "neFMagcBhfWUyBoRNMCBBTCZsTeyeBja",
+    "JWT_SECRET": "roxinho-shop-secret-key"
   }
 }
