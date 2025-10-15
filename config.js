@@ -42,8 +42,8 @@ const config = {
   endpoints: {
     base: '',
     auth: '/auth',
-    products: '/products',
-    categories: '/categories',
+    products: '/produtos',
+    categories: '/categorias',
     reviews: '/reviews',
     historico: '/historico',
     productImages: '/product-images',
