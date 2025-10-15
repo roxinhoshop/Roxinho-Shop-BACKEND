@@ -145,6 +145,8 @@ module.exports = (pool) => {
     async function extractFromAmazon(url) {
         try {
             const { data } = await axios.get(url, {
+                timeout: 10000, // Adicionar um timeout para evitar requisições penduradas
+
                 headers: {
                     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
                 }
@@ -188,7 +190,7 @@ module.exports = (pool) => {
             };
 
         } catch (error) {
-            console.error("Erro ao extrair da Amazon:", error);
+            console.error("Erro ao extrair da Amazon:", error.message, error.response?.status, error.response?.data);
             throw error;
         }
     }
@@ -199,6 +201,8 @@ module.exports = (pool) => {
     async function extractGeneric(url) {
         try {
             const { data } = await axios.get(url, {
+                timeout: 10000, // Adicionar um timeout para evitar requisições penduradas
+
                 headers: {
                     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
                 }
@@ -312,7 +316,7 @@ module.exports = (pool) => {
             };
 
         } catch (error) {
-            console.error("Erro ao extrair genericamente:", error);
+            console.error("Erro ao extrair genericamente:", error.message, error.response?.status, error.response?.data);
             throw error;
         }
     }
