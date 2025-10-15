@@ -10,33 +10,14 @@ const fs = require("fs");
 // Importar configurações centralizadas
 const config = require('./config');
 
-console.log("--- Variáveis de Ambiente do Banco de Dados (process.env) ---");
-console.log("DB_HOST:", process.env.DB_HOST);
-console.log("DB_PORT:", process.env.DB_PORT);
-console.log("DB_DATABASE:", process.env.DB_DATABASE);
-console.log("DB_USER:", process.env.DB_USER);
-console.log("DB_PASSWORD:", process.env.DB_PASSWORD ? "********" : "Não definida");
-console.log("--- process.env completo (temporário para depuração) ---");
-const envToLog = { ...process.env };
-if (envToLog.DB_PASSWORD) envToLog.DB_PASSWORD = "********";
-if (envToLog.JWT_SECRET) envToLog.JWT_SECRET = "********";
-console.log(envToLog);
-console.log("---------------------------------------------------------");
-console.log("----------------------------------------------------------");
 
-console.log("--- Configuração do Banco de Dados (config.database) ---");
-console.log("Host:", config.database.host);
-console.log("Port:", config.database.port);
-console.log("Database:", config.database.name);
-console.log("User:", config.database.user);
-console.log("Password:", config.database.password ? "********" : "Não definida");
-console.log("--------------------------------------------------------");
 
 const app = express();
 const PORT = config.server.port;
 
-// Importar middleware de upload
-const { upload, handleUploadError } = require('./middleware/uploadValidation');
+// Importar middleware de uploaconst uploadValidationPath = require.resolve(\'./middleware/uploadValidation\');
+console.log(\'Caminho resolvido para uploadValidation:\', uploadValidationPath);
+const { upload, handleUploadError } = require(uploadValidationPath);
 
 // Middleware
 app.use(cors({
