@@ -15,9 +15,8 @@ const config = require('./config');
 const app = express();
 const PORT = config.server.port;
 
-// Importar middleware de uploaconst uploadValidationPath = require.resolve(\'./middleware/uploadValidation\');
-console.log(\'Caminho resolvido para uploadValidation:\', uploadValidationPath);
-const { upload, handleUploadError } = require(uploadValidationPath);
+// Importar middleware de upload
+const { upload, handleUploadError } = require('./middleware/uploadValidation');
 
 // Middleware
 app.use(cors({
