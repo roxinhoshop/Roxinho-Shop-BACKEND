@@ -63,39 +63,56 @@ module.exports = (pool) => {
     
     /**
      * Detecta categoria automaticamente baseada no nome do produto
+     * Sistema aprimorado com mais palavras-chave e lógica de prioridade
      */
     async function detectCategory(productName, mlCategoryId, pool) {
         try {
             const name = productName.toLowerCase();
             
-            // Mapeamento de palavras-chave para categorias
+            // Mapeamento de palavras-chave para categorias (ID: slug)
+            // 1: hardware, 2: perifericos, 3: computadores, 4: games
+            // 5: celular-smartphone, 6: tv-audio, 7: audio, 8: espaco-gamer
+            // 9: casa-inteligente, 10: energia
             const categoryMap = {
-                2: ["mouse", "teclado", "headset", "fone", "webcam", "microfone"],
-                1: ["processador", "placa de vídeo", "memória ram", "ssd", "hd", "fonte"],
-                3: ["notebook", "desktop", "pc", "computador", "all in one"],
-                4: ["console", "playstation", "xbox", "nintendo", "controle", "joystick"],
-                5: ["celular", "smartphone", "iphone", "galaxy", "xiaomi"],
-                6: ["tv", "televisão", "smart tv", "soundbar", "home theater"],
-                7: ["caixa de som", "alto-falante", "speaker", "jbl"],
-                8: ["cadeira gamer", "mesa gamer", "suporte monitor"],
-                9: ["alexa", "google home", "lâmpada inteligente", "tomada inteligente"],
-                10: ["carregador", "bateria", "power bank", "fonte de alimentação"]
+                1: ["processador", "cpu", "ryzen", "intel core", "placa de vídeo", "gpu", "rtx", "gtx", "radeon", 
+                    "memória ram", "ddr4", "ddr5", "ssd", "nvme", "hd", "hard disk", "fonte", "psu", 
+                    "placa mãe", "motherboard", "cooler", "water cooler", "gabinete", "case"],
+                2: ["mouse", "teclado", "keyboard", "headset", "fone", "headphone", "webcam", "câmera", 
+                    "microfone", "mic", "mousepad", "monitor", "display", "controle", "gamepad"],
+                3: ["notebook", "laptop", "desktop", "pc gamer", "computador", "all in one", "workstation", 
+                    "mini pc", "chromebook", "ultrabook", "tablet"],
+                4: ["console", "playstation", "ps5", "ps4", "xbox", "nintendo", "switch", "jogo", "game", 
+                    "volante", "racing wheel", "cadeira gamer", "mesa gamer"],
+                5: ["celular", "smartphone", "iphone", "galaxy", "xiaomi", "redmi", "motorola", "samsung", 
+                    "capa celular", "película", "carregador celular", "fone bluetooth", "smartwatch", "relógio inteligente"],
+                6: ["tv", "televisão", "smart tv", "4k tv", "8k tv", "suporte tv", "conversor", "antena", 
+                    "soundbar", "home theater", "receiver"],
+                7: ["caixa de som", "alto-falante", "speaker", "jbl", "amplificador", "interface de áudio", 
+                    "monitor de referência", "subwoofer"],
+                8: ["cadeira gamer", "mesa gamer", "suporte monitor", "braço articulado", "iluminação rgb", 
+                    "led strip", "decoração gamer", "organizador", "tapete"],
+                9: ["alexa", "google home", "assistente virtual", "lâmpada inteligente", "smart light", 
+                    "tomada inteligente", "câmera segurança", "fechadura inteligente", "sensor"],
+                10: ["nobreak", "ups", "estabilizador", "filtro de linha", "power bank", "bateria externa", 
+                     "carregador portátil", "painel solar"]
             };
             
-            // Buscar categoria por palavra-chave
+            // Buscar categoria por palavra-chave (ordem de prioridade)
             for (const [catId, keywords] of Object.entries(categoryMap)) {
                 for (const keyword of keywords) {
                     if (name.includes(keyword)) {
+                        console.log(`✅ Categoria detectada: ${catId} (palavra-chave: ${keyword})`);
                         return parseInt(catId);
                     }
                 }
             }
             
+            console.log(`⚠️ Categoria não detectada, usando padrão: 2 (Periféricos)`);
             // Categoria padrão: Periféricos
             return 2;
             
         } catch (error) {
-            console.error("Erro ao detectar categoria:", error);
+            console.error("❌ Erro ao detectar categoria:", error);
             return 2; // Categoria padrão
         }
     }
