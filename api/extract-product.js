@@ -161,10 +161,7 @@ module.exports = async (req, res) => {
         if (platform === 'mercadolivre') {
             productData = await extractFromMercadoLivre(url);
         } else if (platform === 'amazon') {
-            return res.status(400).json({
-                success: false,
-                message: 'Amazon ainda não suportada. Use Mercado Livre.'
-            });
+                productData = await extractFromAmazon(url);
         }
         
         if (!productData) {

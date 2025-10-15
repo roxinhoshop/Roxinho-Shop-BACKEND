@@ -32,6 +32,7 @@ module.exports = (pool) => {
                 productData = await extractFromMercadoLivre(url);
             } else if (url.includes("amazon.com.br") || url.includes("amazon.com")) {
                 platform = "amazon";
+                console.log("Iniciando extração da Amazon...");
                 productData = await extractFromAmazon(url);
             } else {
                 // Tentar scraper genérico para outras URLs
@@ -170,24 +171,27 @@ module.exports = (pool) => {
             });
             const $ = cheerio.load(data);
 
-            const productName = $("#productTitle").text().trim() || $("h1 span#title").text().trim() || $("meta[name=\"title\"]").attr("content");
+            const productName = $("#productTitle").text().trim() || $("h1 span#title").text().trim() || $("meta[name=\"title\"]").attr("content") || $("meta[property=\"og:title\"]").attr("content");
             
             let price = 0.00;
-            const priceWhole = $(".a-price-whole").first().text().trim();
-            const priceFraction = $(".a-price-fraction").first().text().trim();
-            const priceSymbol = $(".a-price-symbol").first().text().trim();
+            const priceSelectors = [
+                "span.a-price span.a-offscreen",
+                "#priceblock_ourprice",
+                "#priceblock_dealprice",
+                "#kindle-price",
+                ".a-color-price"
+            ];
 
-            if (priceWhole && priceFraction) {
-                price = parseFloat(`${priceWhole}.${priceFraction}`.replace(/[^0-9.]/g, ""));
-            } else {
-                const priceText = $(".a-offscreen").first().text().trim();
+            for (const selector of priceSelectors) {
+                const priceText = $(selector).text().trim();
                 if (priceText) {
                     price = parseFloat(priceText.replace(/[^0-9,.]/g, "").replace(",", "."));
+                    if (!isNaN(price) && price > 0) break;
                 }
             }
 
-            const description = $("#productDescription p").first().text().trim() || $("#feature-bullets ul").text().trim() || $("meta[name=\"description\"]").attr("content");
-            const imageUrl = $("#landingImage").attr("src") || $("#imgTagWrapperId img").attr("src") || $("meta[property=\"og:image\"]").attr("content");
+            const description = $("#productDescription p").first().text().trim() || $("#feature-bullets ul").text().trim() || $("meta[name=\"description\"]").attr("content") || $("meta[property=\"og:description\"]").attr("content");
+            const imageUrl = $("#landingImage").attr("src") || $("#imgTagWrapperId img").attr("src") || $("meta[property=\"og:image\"]").attr("content") || $("meta[name=\"twitter:image\"]").attr("content");
 
             const categoria_id = await detectCategory(productName, null, pool);
 
