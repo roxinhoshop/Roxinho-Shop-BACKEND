@@ -22,7 +22,7 @@ module.exports = (pool) => {
                 avaliacaoMin,
                 emEstoque,
                 desconto,
-                freteGratis,
+
                 ordenacao = 'relevancia',
                 pagina = 1,
                 itensPorPagina = 12,
@@ -72,9 +72,7 @@ module.exports = (pool) => {
                 query += " AND desconto > 0";
             }
 
-            if (freteGratis === 'true') {
-                query += " AND frete_gratis = 1";
-            }
+
 
             if (busca) {
                 query += " AND (nome LIKE ? OR descricao LIKE ? OR marca LIKE ?)";
