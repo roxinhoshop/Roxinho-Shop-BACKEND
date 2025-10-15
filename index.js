@@ -19,10 +19,9 @@ const PORT = config.server.port;
 const { upload, handleUploadError } = require('./middleware/uploadValidation');
 
 // Middleware
-const allowedOrigin = process.env.NODE_ENV === 'production' ? 'https://roxinho-shop.vercel.app' : '*';
-console.log(`CORS Origin configurado: ${allowedOrigin}`);
 app.use(cors({
-    origin: allowedOrigin,
+    origin: '*', // Removido para depuração. Em produção, considere restringir a domínios específicos.
+        '*',
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
