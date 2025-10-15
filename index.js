@@ -1,6 +1,4 @@
 
-
-
 const express = require("express");
 const cors = require("cors");
 const mysql = require("mysql2/promise");
@@ -9,8 +7,6 @@ const fs = require("fs");
 
 // Importar configurações centralizadas
 const config = require('./config');
-
-
 
 const app = express();
 const PORT = config.server.port;
@@ -28,14 +24,16 @@ app.use(cors({
 app.use(express.json({ limit: `${config.upload.maxFileSize}` }));
 app.use(express.urlencoded({ extended: true, limit: `${config.upload.maxFileSize}` }));
 
-// Servir arquivos estáticos da pasta uploads
-app.use('/uploads', express.static(path.join(__dirname, config.upload.uploadDir)));
+// Definir o diretório de uploads
+const uploadsDir = process.env.NODE_ENV === 'production' ? '/tmp/uploads' : path.join(__dirname, config.upload.uploadDir);
 
-// Criar pasta uploads se não existir
-const uploadsDir = path.join(__dirname, config.upload.uploadDir);
-if (!fs.existsSync(uploadsDir)) {
+// Criar pasta uploads se não existir (apenas em desenvolvimento)
+if (process.env.NODE_ENV !== 'production' && !fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
 }
+
+// Servir arquivos estáticos da pasta uploads
+app.use('/uploads', express.static(uploadsDir));
 
 // Configuração do banco de dados
 const dbConfig = {
@@ -231,8 +229,4 @@ app.listen(PORT, () => {
 });
 
 module.exports = app;
-
-
-
-// Triggering a new deployment on Vercel
 
