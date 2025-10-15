@@ -126,6 +126,7 @@ const historicoRoutes = require("./routes/historico")(pool);
 const productImageRoutes = require("./routes/product-images")(pool);
 const categoriesEnhancedRoutes = require("./routes/categories-enhanced")(pool);
 const productScraperRoutes = require("./routes/product-scraper")(pool);
+const productsEnhancedRoutes = require("./routes/products-enhanced")(pool);
 
 
 
@@ -138,6 +139,7 @@ app.use("/api" + config.endpoints.historico, historicoRoutes);
 app.use("/api" + config.endpoints.productImages, productImageRoutes);
 app.use("/api/categories-enhanced", categoriesEnhancedRoutes);
 app.use("/api/product-scraper", productScraperRoutes);
+app.use("/api/products-enhanced", productsEnhancedRoutes);
 
 
 
