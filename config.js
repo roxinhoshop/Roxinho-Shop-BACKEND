@@ -2,9 +2,6 @@
 // Este arquivo centraliza todas as configurações do backend
 
 const config = {
-  console.log("--- Variáveis de Ambiente do Banco de Dados em config.js (process.env) ---");
-  console.log("DB_DATABASE:", process.env.DB_DATABASE);
-  console.log("-------------------------------------------------------------------");
 
   // Configurações do servidor
   server: {
