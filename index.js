@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const mysql = require("mysql2/promise");
@@ -5,46 +6,46 @@ const path = require("path");
 const fs = require("fs");
 
 // Importar configurações centralizadas
-const config = require(\'./config\');
+const config = require("./config");
 
 const app = express();
 const PORT = config.server.port;
 
 // Importar middleware de upload
-const { upload, handleUploadError } = require(\'./middleware/uploadValidation\');
+const { upload, handleUploadError } = require("./middleware/uploadValidation");
 
 // Middleware
-const allowedOrigins = process.env.NODE_ENV === 'production'
-    ? [config.server.frontendUrl, 'https://roxinho-shop.vercel.app'] // Adiciona a URL do frontend Vercel explicitamente
-    : ['http://localhost:3000', 'http://localhost:5173', 'http://localhost:8080', config.server.frontendUrl]; // URLs de desenvolvimento
+const allowedOrigins = process.env.NODE_ENV === "production"
+    ? [config.server.frontendUrl, "https://roxinho-shop.vercel.app"] // Adiciona a URL do frontend Vercel explicitamente
+    : ["http://localhost:3000", "http://localhost:5173", "http://localhost:8080", config.server.frontendUrl]; // URLs de desenvolvimento
 
 app.use(cors({
     origin: function (origin, callback) {
-        // Permite requisições sem 'origin' (ex: mobile apps, curl)
+        // Permite requisições sem "origin" (ex: mobile apps, curl)
         if (!origin) return callback(null, true);
         if (allowedOrigins.indexOf(origin) === -1) {
-            const msg = 'A política de CORS para este site não permite acesso a partir da origem ' + origin;
+            const msg = "A política de CORS para este site não permite acesso a partir da origem " + origin;
             return callback(new Error(msg), false);
         }
         return callback(null, true);
     },
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"]
 }));
 
 app.use(express.json({ limit: `${config.upload.maxFileSize}` }));
 app.use(express.urlencoded({ extended: true, limit: `${config.upload.maxFileSize}` }));
 
 // Definir o diretório de uploads
-const uploadsDir = process.env.NODE_ENV === \'production\' ? \'/tmp/uploads\' : path.join(__dirname, config.upload.uploadDir);
+const uploadsDir = process.env.NODE_ENV === "production" ? "/tmp/uploads" : path.join(__dirname, config.upload.uploadDir);
 
 // Criar pasta uploads se não existir (apenas em desenvolvimento)
-if (process.env.NODE_ENV !== \'production\' && !fs.existsSync(uploadsDir)) {
+if (process.env.NODE_ENV !== "production" && !fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
 // Servir arquivos estáticos da pasta uploads
-app.use(\'/uploads\', express.static(uploadsDir));
+app.use("/uploads", express.static(uploadsDir));
 
 // Configuração do banco de dados
 const dbConfig = {
@@ -107,7 +108,7 @@ app.get("/", (req, res) => {
 // Rota de health check - DEVE VIR ANTES DAS OUTRAS ROTAS
 app.get("/health", async (req, res) => {
     try {
-        await pool.query(\'SELECT 1\');
+        await pool.query("SELECT 1");
         res.json({
             status: "healthy",
             database: "connected",
@@ -124,15 +125,16 @@ app.get("/health", async (req, res) => {
 });
 
 // Importar e usar as rotas
-const authRoutes = require(\'./routes/auth\')(pool);
-const productRoutes = require(\'./routes/products\')(pool);
-const categoryRoutes = require(\'./routes/categories\')(pool);
-const reviewRoutes = require(\'./routes/reviews\')(pool);
-const historicoRoutes = require(\'./routes/historico\')(pool);
-const productImageRoutes = require(\'./routes/product-images\')(pool);
-const categoriesEnhancedRoutes = require(\'./routes/categories-enhanced\')(pool);
-const productApiIntegratorRoutes = require(\'./routes/product-api-integrator\')(pool);
-const productsEnhancedRoutes = require(\'./routes/products-enhanced\')(pool);
+const authRoutes = require("./routes/auth")(pool);
+const productRoutes = require("./routes/products")(pool);
+const categoryRoutes = require("./routes/categories")(pool);
+const reviewRoutes = require("./routes/reviews")(pool);
+const historicoRoutes = require("./routes/historico")(pool);
+const productImageRoutes = require("./routes/product-images")(pool);
+const categoriesEnhancedRoutes = require("./routes/categories-enhanced")(pool);
+const productApiIntegratorRoutes = require("./routes/product-api-integrator")(pool);
+const productsEnhancedRoutes = require("./routes/products-enhanced")(pool);
+const productScraperRoutes = require("./routes/productScraper")(pool);
 
 // Aplicar rotas
 app.use("/api" + config.endpoints.auth, authRoutes);
@@ -144,14 +146,15 @@ app.use("/api" + config.endpoints.productImages, productImageRoutes);
 app.use("/api/categories-enhanced", categoriesEnhancedRoutes);
 app.use("/api/product-integrator", productApiIntegratorRoutes);
 app.use("/api/products-enhanced", productsEnhancedRoutes);
+app.use("/api/product-scraper", productScraperRoutes);
 
 // Rota específica para upload de imagens de usuário com validação de 50MB
-app.post(`${config.endpoints.upload}/user-photo`, upload.single(\'photo\'), (req, res) => {
+app.post(`${config.endpoints.upload}/user-photo`, upload.single("photo"), (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({
                 success: false,
-                error: \'Nenhum arquivo foi enviado\'
+                error: "Nenhum arquivo foi enviado"
             });
         }
 
@@ -159,7 +162,7 @@ app.post(`${config.endpoints.upload}/user-photo`, upload.single(\'photo\'), (req
         
         res.json({
             success: true,
-            message: \'Foto do usuário enviada com sucesso\',
+            message: "Foto do usuário enviada com sucesso",
             file: {
                 filename: req.file.filename,
                 originalname: req.file.originalname,
@@ -168,21 +171,21 @@ app.post(`${config.endpoints.upload}/user-photo`, upload.single(\'photo\'), (req
             }
         });
     } catch (error) {
-        console.error(\'Erro no upload da foto do usuário:\', error);
+        console.error("Erro no upload da foto do usuário:", error);
         res.status(500).json({
             success: false,
-            error: \'Erro interno no servidor\'
+            error: "Erro interno no servidor"
         });
     }
 });
 
 // Rota para múltiplos uploads com validação
-app.post(`${config.endpoints.upload}/multiple`, upload.array(\'files\', 10), (req, res) => {
+app.post(`${config.endpoints.upload}/multiple`, upload.array("files", 10), (req, res) => {
     try {
         if (!req.files || req.files.length === 0) {
             return res.status(400).json({
                 success: false,
-                error: \'Nenhum arquivo foi enviado\'
+                error: "Nenhum arquivo foi enviado"
             });
         }
 
@@ -199,10 +202,10 @@ app.post(`${config.endpoints.upload}/multiple`, upload.array(\'files\', 10), (re
             files: files
         });
     } catch (error) {
-        console.error(\'Erro no upload múltiplo:\', error);
+        console.error("Erro no upload múltiplo:", error);
         res.status(500).json({
             success: false,
-            error: \'Erro interno no servidor\'
+            error: "Erro interno no servidor"
         });
     }
 });
@@ -212,11 +215,11 @@ app.use(handleUploadError);
 
 // Middleware de tratamento de erros global
 app.use((error, req, res, next) => {
-    console.error(\'Erro não tratado:\', error);
+    console.error("Erro não tratado:", error);
     res.status(500).json({
         success: false,
-        error: \'Erro interno do servidor\',
-        message: process.env.NODE_ENV === \'development\' ? error.message : \'Algo deu errado\'
+        error: "Erro interno do servidor",
+        message: process.env.NODE_ENV === "development" ? error.message : "Algo deu errado"
     });
 });
 
@@ -232,7 +235,7 @@ app.use((req, res) => {
 
 app.listen(PORT, () => {
     console.log(`🚀 Servidor rodando na porta ${PORT}`);
-    console.log(`📱 Ambiente: ${process.env.NODE_ENV || \'development\'}`);
+    console.log(`📱 Ambiente: ${process.env.NODE_ENV || "development"}`);
     console.log(`🌐 URL: http://localhost:${PORT}`);
 });
 
