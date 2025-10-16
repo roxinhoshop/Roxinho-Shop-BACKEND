@@ -7,7 +7,7 @@ const config = {
   server: {
     port: process.env.PORT || 3000,
     env: process.env.NODE_ENV || 'development',
-    frontendUrl: process.env.FRONTEND_URL || '*',
+    frontendUrl: process.env.FRONTEND_URL || 'https://roxinho-shop.vercel.app',
     apiBaseUrl: process.env.API_BASE_URL || '/api'
   },
   
@@ -20,8 +20,7 @@ const config = {
     port: process.env.DB_PORT || 3306,
     connectionLimit: 10,
     queueLimit: 0,
-    acquireTimeout: 60000,
-    timeout: 60000
+
   },
   
   // Configurações de autenticação

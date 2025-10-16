@@ -45,9 +45,9 @@ const dbConfig = {
     waitForConnections: true,
     connectionLimit: config.database.connectionLimit,
     queueLimit: config.database.queueLimit,
-    acquireTimeout: config.database.acquireTimeout,
-    timeout: config.database.timeout,
-    reconnect: true
+
+
+
 };
 
 let pool;
