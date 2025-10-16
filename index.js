@@ -87,6 +87,7 @@ app.get("/api/test", async (req, res) => {
 
 // Importar rotas
 const importacaoRoutes = require("./routes/importacao");
+const productScraperRoutes = require("./routes/product-scraper");
 const productRoutes = require("./routes/products");
 const categoryRoutes = require("./routes/categories");
 
@@ -94,6 +95,7 @@ const categoryRoutes = require("./routes/categories");
 app.use("/api/importacao", importacaoRoutes);
 app.use("/api/produtos", productRoutes(pool));
 app.use("/api/categorias", categoryRoutes(pool));
+app.use("/api/product-scraper", cors(), productScraperRoutes(pool));
 
 // Middleware 404
 app.use((req, res) => {
