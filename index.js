@@ -21,11 +21,11 @@ app.use(cors({
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization", "X-Requested-With");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With"); // Corrigido
   
   // Handle preflight
   if (req.method === "OPTIONS") {
-    return res.sendStatus(200);
+    return res.status(200).send(); // Envia status 200 com os headers já definidos
   }
   
   next();
