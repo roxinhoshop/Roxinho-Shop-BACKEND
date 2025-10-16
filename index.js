@@ -14,7 +14,23 @@ const PORT = config.server.port;
 const { upload, handleUploadError } = require(\'./middleware/uploadValidation\');
 
 // Middleware
-app.use(cors()); // CORS completamente aberto para fins de teste. CUIDADO em produção!
+const allowedOrigins = process.env.NODE_ENV === 'production'
+    ? [config.server.frontendUrl, 'https://roxinho-shop.vercel.app'] // Adiciona a URL do frontend Vercel explicitamente
+    : ['http://localhost:3000', 'http://localhost:5173', 'http://localhost:8080', config.server.frontendUrl]; // URLs de desenvolvimento
+
+app.use(cors({
+    origin: function (origin, callback) {
+        // Permite requisições sem 'origin' (ex: mobile apps, curl)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.indexOf(origin) === -1) {
+            const msg = 'A política de CORS para este site não permite acesso a partir da origem ' + origin;
+            return callback(new Error(msg), false);
+        }
+        return callback(null, true);
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
 
 app.use(express.json({ limit: `${config.upload.maxFileSize}` }));
 app.use(express.urlencoded({ extended: true, limit: `${config.upload.maxFileSize}` }));
