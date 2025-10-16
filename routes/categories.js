@@ -76,14 +76,24 @@ module.exports = (pool) => {
         }
     });
 
-    // Obter uma categoria por slug (incluindo suas subcategorias)
-    router.get("/:slug", async (req, res) => {
+    // Obter uma categoria por ID ou slug
+    router.get("/:identifier", async (req, res) => {
         try {
-            const { slug } = req.params;
-            const [rows] = await pool.query(
-                "SELECT * FROM categorias WHERE slug = ? AND ativo = 1",
-                [slug]
-            );
+            const { identifier } = req.params;
+            let rows;
+
+            if (!isNaN(identifier) && parseInt(identifier).toString() === identifier) { // É um ID numérico
+                [rows] = await pool.query(
+                    "SELECT * FROM categorias WHERE id = ? AND ativo = 1",
+                    [identifier]
+                );
+            } else { // É um slug
+                [rows] = await pool.query(
+                    "SELECT * FROM categorias WHERE slug = ? AND ativo = 1",
+                    [identifier]
+                );
+            }
+
             if (rows.length === 0) {
                 return res.status(404).json({ message: "Categoria não encontrada." });
             }
@@ -97,28 +107,7 @@ module.exports = (pool) => {
 
             res.json(categoriaPrincipal);
         } catch (error) {
-            console.error("Erro ao obter categoria por slug:", error);
-            res.status(500).json({ message: error.message });
-        }
-    });
-
-    // Obter uma categoria por ID (deve vir por último para evitar conflito com slugs)
-    router.get("/:id", async (req, res) => {
-        try {
-            const { id } = req.params;
-            // Verificar se o ID é um número para evitar conflito com slugs
-            if (isNaN(id)) {
-                return res.status(404).json({ message: "Formato de ID inválido." });
-            }
-            const [rows] = await pool.query(
-                "SELECT * FROM categorias WHERE id = ?",
-                [id]
-            );
-            if (rows.length === 0) {
-                return res.status(404).json({ message: "Categoria não encontrada." });
-            }
-            res.json(rows[0]);
-        } catch (error) {
+            console.error("Erro ao obter categoria por ID/slug:", error);
             res.status(500).json({ message: error.message });
         }
     });
