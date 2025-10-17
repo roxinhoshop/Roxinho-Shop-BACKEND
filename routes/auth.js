@@ -3,20 +3,12 @@ const router = express.Router();
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const mysql = require("mysql2/promise");
-const nodemailer = require("nodemailer");
+
 const { authenticateToken, authorizeAdmin } = require("../middleware/authMiddleware");
 
 const JWT_SECRET = process.env.JWT_SECRET || "supersecretjwtkey";
 
-const transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST,
-    port: process.env.EMAIL_PORT,
-    secure: process.env.EMAIL_SECURE === 'true',
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-    },
-});
+
 
 module.exports = (pool) => {
     // Rota de registro
@@ -37,7 +29,7 @@ module.exports = (pool) => {
             const nomeCompleto = `${nome} ${sobrenome}`;
             
             await pool.query(
-                "INSERT INTO usuarios (nome, email, telefone, data_nascimento, senha, is_admin, verificado) VALUES (?, ?, ?, ?, ?, 0, 1)", 
+                "INSERT INTO usuarios (nome, email, telefone, data_nascimento, senha, is_admin) VALUES (?, ?, ?, ?, ?, 0)", 
                 [nomeCompleto, email, telefone, data_nascimento, hashedPassword]
             );
             
@@ -154,22 +146,11 @@ module.exports = (pool) => {
         }
     });
 
-    // Rota de verificação de e-mail (temporariamente desativada, mas mantida)
-    router.get("/verify-email/:token", async (req, res) => {
-        try {
-            const { token } = req.params;
-            const decoded = jwt.verify(token, JWT_SECRET);
-            await pool.query("UPDATE usuarios SET verificado = 1, verification_token = NULL WHERE email = ?", [decoded.email]);
-            res.send("E-mail verificado com sucesso!");
-        } catch (error) {
-            res.status(500).send("Link de verificação inválido ou expirado.");
-        }
-    });
 
     // Rota para listar todos os usuários (apenas admin)
     router.get("/users", authenticateToken, authorizeAdmin, async (req, res) => {
         try {
-            const [users] = await pool.query("SELECT id, nome, email, telefone, data_nascimento, is_admin, verificado FROM usuarios");
+            const [users] = await pool.query("SELECT id, nome, email, telefone, data_nascimento, is_admin FROM usuarios");
             res.json({
                 success: true,
                 users: users
