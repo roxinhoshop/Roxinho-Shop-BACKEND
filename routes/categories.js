@@ -243,5 +243,26 @@ module.exports = (pool) => {
         }
     });
 
+    // Listar subcategorias de uma categoria pai (público)
+    router.get("/:categoryId/subcategorias", async (req, res) => {
+        try {
+            const { categoryId } = req.params;
+            const [rows] = await pool.query(
+                "SELECT id, nome FROM categorias WHERE categoria_pai_id = ? AND ativo = 1 ORDER BY ordem ASC, nome ASC",
+                [categoryId]
+            );
+            res.json({
+                status: 'success',
+                subcategories: rows
+            });
+        } catch (error) {
+            console.error("Erro ao obter subcategorias:", error);
+            res.status(500).json({
+                status: 'error',
+                message: error.message
+            });
+        }
+    });
+
     return router;
 };
