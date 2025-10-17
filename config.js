@@ -17,7 +17,7 @@ const config = {
     user: process.env.DB_USER || "root",
     password: process.env.DB_PASS || "neFMagcBhfWUyBoRNMCBBTCZsTeyeBja",
     name: process.env.DB_NAME || "railway",
-    port: process.env.DB_PORT || 3306,
+    port: process.env.DB_PORT || 46156,
     connectionLimit: 10,
     queueLimit: 0,
 

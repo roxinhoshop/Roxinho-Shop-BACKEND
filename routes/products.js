@@ -61,7 +61,7 @@ module.exports = (pool) => {
     router.get("/:id", async (req, res) => {
         try {
             const { id } = req.params;
-            const [rows] = await pool.query("SELECT * FROM produto WHERE id = ? AND ativo = 1", [id]);
+            const [rows] = await pool.query("SELECT p.*, c.nome AS categoria_nome FROM produto p JOIN categorias c ON p.categoria_id = c.id WHERE p.id = ? AND p.ativo = 1", [id]);
             if (rows.length === 0) {
                 return res.status(404).json({ 
                     status: 'error',
