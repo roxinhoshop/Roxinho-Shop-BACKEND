@@ -1,10 +1,11 @@
 require("dotenv").config();
 const express = require("express");
+const config = require("./config");
 const cors = require("cors");
 const mysql = require("mysql2/promise");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = config.server.port;
 
 // ==========================================
 // CONFIGURAÇÃO CORS - IMPORTANTE!
@@ -37,11 +38,11 @@ app.use(express.urlencoded({ extended: true }));
 
 // Configuração do banco de dados
 const dbConfig = {
-  host: process.env.DB_HOST || "switchback.proxy.rlwy.net",
-  port: process.env.DB_PORT || 46156,
-  user: process.env.DB_USER || "root",
-  password: process.env.DB_PASS || "neFMagcBhfWUyBoRNMCBBTCZsTeyeBja",
-  database: process.env.DB_NAME || "railway"
+  host: config.database.host,
+  port: config.database.port,
+  user: config.database.user,
+  password: config.database.password,
+  database: config.database.name
 };
 
 // Criar pool de conexões
@@ -90,11 +91,13 @@ const importacaoRoutes = require("./routes/importacao");
 const productScraperRoutes = require("./routes/product-scraper");
 const productRoutes = require("./routes/products");
 const categoryRoutes = require("./routes/categories");
+const authRoutes = require("./routes/auth");
 
 // Usar rotas
 app.use("/api/importacao", importacaoRoutes);
 app.use("/api/produtos", productRoutes(pool));
 app.use("/api/categorias", categoryRoutes(pool));
+app.use("/api/auth", authRoutes(pool));
 app.use("/api/product-scraper", cors(), productScraperRoutes(pool));
 
 // Middleware 404
@@ -120,7 +123,7 @@ app.use((err, req, res, next) => {
 // Iniciar servidor
 app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando na porta ${PORT}`);
-  console.log(`📊 Ambiente: ${process.env.NODE_ENV || "development"}`);
+  console.log(`📊 Ambiente: ${config.server.env}`);
   console.log(`🌐 URL: http://localhost:${PORT}`);
   console.log(`✅ CORS habilitado para todas as origens`);
 });

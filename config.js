@@ -13,10 +13,10 @@ const config = {
   
   // Configurações do banco de dados
   database: {
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    name: process.env.DB_DATABASE,
+    host: process.env.DB_HOST || "switchback.proxy.rlwy.net",
+    user: process.env.DB_USER || "root",
+    password: process.env.DB_PASS || "neFMagcBhfWUyBoRNMCBBTCZsTeyeBja",
+    name: process.env.DB_NAME || "railway",
     port: process.env.DB_PORT || 3306,
     connectionLimit: 10,
     queueLimit: 0,
