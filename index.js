@@ -94,7 +94,7 @@ const categoryRoutes = require("./routes/categories");
 const authRoutes = require("./routes/auth");
 
 // Usar rotas
-app.use("/api/importacao", importacaoRoutes);
+app.use("/api/importacao", importacaoRoutes(pool));
 app.use("/api/produtos", productRoutes(pool));
 app.use("/api/categorias", categoryRoutes(pool));
 app.use("/api/auth", authRoutes(pool));

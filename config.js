@@ -13,11 +13,11 @@ const config = {
   
   // Configurações do banco de dados
   database: {
-    host: process.env.DB_HOST || "switchback.proxy.rlwy.net",
-    user: process.env.DB_USER || "root",
-    password: process.env.DB_PASS || "neFMagcBhfWUyBoRNMCBBTCZsTeyeBja",
-    name: process.env.DB_NAME || "railway",
-    port: process.env.DB_PORT || 46156,
+    host: "switchback.proxy.rlwy.net",
+    user: "root",
+    password: "neFMagcBhfWUyBoRNMCBBTCZsTeyeBja",
+    name: "railway",
+    port: 46156,
     connectionLimit: 10,
     queueLimit: 0,
 
