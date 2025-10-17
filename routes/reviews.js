@@ -98,9 +98,9 @@ module.exports = (pool) => {
             // Criar avaliação
             const [result] = await pool.query(
                 `INSERT INTO avaliacoes 
-                (produto_id, usuario_id, nota, titulo, comentario) 
-                VALUES (?, ?, ?, ?, ?)`,
-                [produto_id, usuario_id, nota, titulo || null, comentario || null]
+                (produto_id, usuario_id, usuario_nome, nota, titulo, comentario) 
+                VALUES (?, ?, ?, ?, ?, ?)`,
+                [produto_id, usuario_id, req.user.nome, nota, titulo || null, comentario || null]
             );
 
             res.status(201).json({

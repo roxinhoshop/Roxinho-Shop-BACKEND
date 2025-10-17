@@ -86,6 +86,7 @@ module.exports = (pool) => {
             const { 
                 nome, 
                 descricao, 
+                descricao_longa,
                 preco, 
                 estoque = 10, 
                 imagem_principal, 
@@ -98,6 +99,8 @@ module.exports = (pool) => {
                 preco_amazon = null,
                 link_mercado_livre = null,
                 preco_mercado_livre = null,
+                valor_mercado_livre = null,
+                valor_amazon = null,
                 categoria_id = null
             } = req.body;
             
@@ -123,16 +126,18 @@ module.exports = (pool) => {
             // Inserir produto com campos corretos da tabela
             const [result] = await pool.query(
                 `INSERT INTO produto (
-                    nome, descricao, preco, estoque, 
+                    nome, descricao, descricao_longa, preco, estoque, 
                     imagem_principal, marca, modelo,
                     link_amazon, preco_amazon,
                     link_mercado_livre, preco_mercado_livre,
+                    valor_mercado_livre, valor_amazon,
                     ativo,
                     categoria_id
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, 
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, 
                 [
                     nome, 
                     descricao, 
+                    descricao_longa, 
                     preco, 
                     estoque, 
                     imagem_principal, 
@@ -142,6 +147,8 @@ module.exports = (pool) => {
                     final_preco_amazon,
                     final_link_mercado_livre,
                     final_preco_mercado_livre,
+                    valor_mercado_livre,
+                    valor_amazon,
                     ativo,
                     final_categoria_id
                 ]

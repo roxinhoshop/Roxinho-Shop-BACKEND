@@ -80,7 +80,8 @@ module.exports = (pool) => {
             const token = jwt.sign({ 
                 userId: user.id, 
                 email: user.email, 
-                isAdmin: user.is_admin 
+                isAdmin: user.is_admin, 
+                nome: user.nome 
             }, JWT_SECRET, { expiresIn: "24h" });
             
             // Extrair primeiro nome
